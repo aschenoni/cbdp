@@ -1,0 +1,27 @@
+#!/bin/bash
+
+function less_output {
+	prefix=$1
+	\rm $prefix-all
+	for f in $prefix/*
+	do
+		echo "["$f"]" >> $prefix-all
+		cat $f >> $prefix-all
+		echo "" >> $prefix-all
+	done
+	less -r $prefix-all
+}
+
+if [ -z "$1" ]
+then
+	echo "Usage: "$0" remote_cmd"
+	exit 1
+fi
+
+rm -rf err 
+rm -rf out
+
+pssh -h host-list -o out -e err $@
+
+less_output "err"
+less_output "out"
