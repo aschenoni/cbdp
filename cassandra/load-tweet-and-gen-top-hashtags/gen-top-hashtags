@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DEF_CLASS_PATH_FILE=.dep-class-path
+if [ ! -f $DEF_CLASS_PATH_FILE ];
+then
+	mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
+fi
+
+java -cp target/tweet-loader-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` multidc/GenTopHashtags $@
