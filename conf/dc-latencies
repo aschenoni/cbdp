@@ -1,0 +1,21 @@
+# from to avg_ping_rtt_in_ms
+mdc-s60 mdc-s70 92.502
+mdc-s60 mdc-s80 95.063
+mdc-s60 mdc-p40 185.464
+
+mdc-s70 mdc-s60 96.701
+mdc-s70 mdc-s80 161.027
+mdc-s70 mdc-p40 140.031
+
+mdc-s80 mdc-s60 97.918
+mdc-s80 mdc-s70 160.345
+mdc-s80 mdc-p40 270.528
+
+mdc-p40 mdc-s60 184.288
+mdc-p40 mdc-s70 134.734
+mdc-p40 mdc-s80 268.827
+
+# mdc-s60 us-e
+# mdc-s70 us-w
+# mdc-s80 irland
+# mdc-p40 tokyo
