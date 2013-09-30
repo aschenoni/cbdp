@@ -1,0 +1,16 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.6 FATAL_ERROR)
+
+#SET (CMAKE_BUILD_TYPE Debug)
+SET (CMAKE_BUILD_TYPE Release)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+# C++11
+IF (UNIX)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
+ENDIF()
+
+FIND_PACKAGE(Boost COMPONENTS system filesystem timer regex locale thread date_time REQUIRED)
+
+INCLUDE_DIRECTORIES (${Boost_INCLUDE_DIRS})
+ADD_EXECUTABLE ( ftwrr ftwrr.cpp tweet.cpp util.cpp )
+TARGET_LINK_LIBRARIES (ftwrr ${Boost_LIBRARIES})
