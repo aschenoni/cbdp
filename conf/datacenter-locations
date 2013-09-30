@@ -1,0 +1,15 @@
+# Google data center locations as of Aug 14th.
+#   Assume the first each of the two characters of the DC names is unique.
+33.195402,-80.013042 "Berkeley County, South Carolina"
+41.220422,-95.887624 "Council Bluffs, Iowa"
+33.754709,-84.586322 "Douglas County, Georgia"
+-33.366503,-70.73333 "Quilicura, Chile"
+36.239722,-95.332952 "Mayes County, Oklahoma"
+35.898272,-81.547395 "Lenoir, North Carolina"
+45.631941,-121.200744 "The Dalles, Oregon"
+23.989389,120.475967 "Hong Kong"
+1.352156,103.707659 "Singapore"
+24.008208,120.48146 "Taiwan"
+60.569976,27.193724 "Hamina, Finland"
+50.469033,3.865298 "St Ghislain, Belgium"
+53.319659,-6.442174 "Dublin, Ireland"
