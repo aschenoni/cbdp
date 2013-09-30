@@ -1,0 +1,119 @@
+#! /usr/bin/python
+
+# check the ping rtt among all pairs.
+
+import os
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+
+
+def timing(f):
+	def wrap(*args):
+		time1 = time.time()
+		ret = f(*args)
+		time2 = time.time()
+		print '  %s(): %0.3f s' % (f.func_name, (time2 - time1))
+		return ret 
+	return wrap
+
+
+CassNodes = []
+
+
+class VM:
+	def __init__(self, name):
+		self.name = name
+		self.cmdfile = "/tmp/cass-cmd-in-%s" % name
+		self.outfile = "/tmp/cass-cmd-out-%s" % name
+
+	def __getitem__(self, i):
+		if i == 0:
+			return self.name
+		else:
+			raise Exception("index out of range: ", i)
+
+	def __repr__(self):
+		return "%s" % (self.name)
+
+
+def build_cass_node_list(vm_list_fn):
+	fo = open(vm_list_fn)
+	while True:
+		line = fo.readline()
+		if not line:
+			break
+		node_name = line.split()[0]
+		CassNodes.append(VM(node_name))
+	#CassNodes.sort(key=operator.itemgetter(1))
+	print "VM list: %s" % (" ".join(map(str, CassNodes)))
+
+
+def thread_measure_rtt(rtt, rtt_lock, vm_from, vm_to):
+	fo = tempfile.NamedTemporaryFile()
+	fo.write("ping -c 3 %s | grep avg" % CassNodes[vm_to])
+	fo.flush()
+	cmd = "ssh -A root@%s 'bash -s' < %s" % (CassNodes[vm_from], fo.name)
+	output = subprocess.check_output(cmd, shell=True)
+	#print "[%s]" % output
+	
+	rtt_lock.acquire()
+	if vm_from not in rtt:
+		rtt[vm_from] = {}
+	rtt[vm_from][vm_to] = output.split()[3].split("/")[1]
+	rtt_lock.release()
+
+	sys.stdout.write(".")
+	sys.stdout.flush()
+
+
+def print_rtt_matrix(rtt):
+	#print rtt
+	sys.stdout.write("          ")
+	for j in range(0, len(CassNodes)): 
+		sys.stdout.write("%7s " % CassNodes[j])
+	sys.stdout.write("\n")
+
+	for i in range(0, len(CassNodes)): 
+		sys.stdout.write("%7s " % CassNodes[i])
+
+		for j in range(0, len(CassNodes)): 
+			if j in rtt[i]:
+				sys.stdout.write("%7s " % rtt[i][j])
+			else:
+				sys.stdout.write("       ")
+		sys.stdout.write("\n")
+
+
+def check_latencies():
+	sys.stdout.write("checking latencies ")
+	sys.stdout.flush()
+	rtt = {}
+	rtt_lock = threading.Lock()
+	threads = []
+	for i in range(0, len(CassNodes)):
+		for j in range(0, len(CassNodes)):
+			t = threading.Thread(target=thread_measure_rtt, args=(rtt, rtt_lock, i, j))
+			threads.append(t)
+			t.start()
+	for t in threads:
+		t.join()
+	print "\n"
+	return rtt
+
+
+def main(argv):
+	if len(argv) != 1:
+		sys.exit("Usage: %s" % argv[0])
+
+	conf_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "conf")
+	vm_list_fn = os.path.join(conf_dir, "vm-list")
+	build_cass_node_list(vm_list_fn)
+	rtt = check_latencies()
+	print_rtt_matrix(rtt)
+
+
+if __name__ == "__main__":
+	sys.exit(main(sys.argv))
