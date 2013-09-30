@@ -2,7 +2,7 @@
 
 function less_output {
 	prefix=$1
-	\rm $prefix-all
+	rm -f $prefix-all
 	for f in $prefix/*
 	do
 		echo "["$f"]" >> $prefix-all
@@ -19,11 +19,13 @@ then
 fi
 
 BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+ERR_DIR=/tmp/pssh-err
+OUT_DIR=/tmp/pssh-out
 
-rm -rf $BIN_DIR/err
-rm -rf $BIN_DIR/out
+rm -rf $ERR_DIR
+rm -rf $OUT_DIR
 
-pssh -h $BIN_DIR/host-list --option="ForwardAgent yes" -o $BIN_DIR/out -e $BIN_DIR/err $@
+pssh -h $BIN_DIR/host-list --option="ForwardAgent yes" -o $OUT_DIR -e $ERR_DIR $@
 
-less_output $BIN_DIR"/err"
-less_output $BIN_DIR"/out"
+less_output $ERR_DIR
+less_output $OUT_DIR
