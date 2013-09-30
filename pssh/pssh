@@ -21,7 +21,7 @@ fi
 rm -rf err 
 rm -rf out
 
-pssh -h host-list -o out -e err $@
+pssh -h host-list --option="ForwardAgent yes" -o out -e err $@
 
 less_output "err"
 less_output "out"
