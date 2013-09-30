@@ -4,5 +4,7 @@ time ./pssh service ssh restart
 
 # system update
 time ./pssh "time (apt-get update && apt-get -y dist-upgrade && apt-get -y autoremove)"
-
 time ./pssh "time (apt-get install -y htop git vim ctags)"
+
+# git repository update
+time ./pssh "(cd ~/work/cbdp && git pull)"
