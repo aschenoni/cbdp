@@ -1,0 +1,16 @@
+# Multi-DC project. Begin.
+#
+# u1304 cassandra. .90 seems to have been assigned to polymoa1. leave 90s for others.
+130.207.110.120 mdc-s30.cc.gatech.edu mdc-s30
+130.207.110.121 mdc-s40.cc.gatech.edu mdc-s40
+130.207.110.122 mdc-s50.cc.gatech.edu mdc-s50
+130.207.110.123 mdc-s60.cc.gatech.edu mdc-s60
+130.207.110.124 mdc-s70.cc.gatech.edu mdc-s70
+130.207.110.125 mdc-s80.cc.gatech.edu mdc-s80
+130.207.110.126 mdc-s140.cc.gatech.edu mdc-s140
+130.207.110.127 mdc-s150.cc.gatech.edu mdc-s150
+130.207.110.128 mdc-p10.cc.gatech.edu mdc-p10
+130.207.110.129 mdc-p20.cc.gatech.edu mdc-p20
+130.207.110.130 mdc-p40.cc.gatech.edu mdc-p40
+130.207.110.131 mdc-p50.cc.gatech.edu mdc-p50
+# Multi-DC project. End.
