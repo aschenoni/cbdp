@@ -18,10 +18,12 @@ then
 	exit 1
 fi
 
-rm -rf err 
-rm -rf out
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
 
-pssh -h host-list --option="ForwardAgent yes" -o out -e err $@
+rm -rf $BIN_DIR/err
+rm -rf $BIN_DIR/out
 
-less_output "err"
-less_output "out"
+pssh -h $BIN_DIR/host-list --option="ForwardAgent yes" -o $BIN_DIR/out -e $BIN_DIR/err $@
+
+less_output $BIN_DIR"/err"
+less_output $BIN_DIR"/out"
