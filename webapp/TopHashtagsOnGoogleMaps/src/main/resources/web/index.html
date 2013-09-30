@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-2.0.3.min.js"> </script>
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/src/markerclusterer.js"></script>
+<style type="text/css">
+	html, body { height:100%; padding:0; margin:0;}
+	body {font-family:'Lucida Grande'; font-size:10px;}
+	table { border-collapse:collapse; }
+	table, td, th { border:1px solid gray; padding:0; margin:0; }
+</style>
+</head>
+
+<body>
+<table style="height:100%; width:100%;">
+	<tr valign="top" style="height: 70%">
+		<td> <select id="select-date-list" size=20 style="height: 100%;"> <option> (none) </option> </select> </td>
+		<td> <select id="select-hashtag-list" size=20 style="height: 100%; width:160px;"> <option> (none) </option> </select> </td>
+		<td rowspan=2 style="width:100%;"> <div id="map-canvas" style="width:100%; height:100%;"></div> </td>
+	</tr>
+	<tr>
+		<td valign="top" colspan=2" style="height: 30%"> <div id="div-console"> </div> </td>
+	</tr>
+</table>
+
+<script type="text/javascript" language="javascript">
+	$(document).ready(function() {
+		var date_selected;
+		var hashtag_selected;
+		var coord_tids = [];
+		var day_or_week = "day";
+
+		var map = null;
+		var map_infowindow = null;
+		var markers = [];
+		var marker_cluster = null;
+
+		function update_select_date_list(data) {
+			$("#select-date-list").empty();
+			for (var i = 0; i < data.length; i ++) {
+				$("#select-date-list").append("<option value=\"" + data[i] + "\">" + data[i] +  "</option>");
+			}
+		}
+
+		function update_select_hashtag_list() {
+			$.getJSON("/jquery/get-top-hashtags-by-date.json",
+				{ day_or_week: day_or_week,
+					date: date_selected,
+					max_result: 1000
+				},
+				function(data) {
+					$("#select-hashtag-list").empty();
+					for (var i = 0; i < data.length; i ++) {
+						$.each(data[i], function(k, v) {
+							$("#select-hashtag-list").append("<option value=\"" + k + "\">" + k + " " + v +  "</option>");
+						});
+					}
+					if (hashtag_selected != null) {
+						if ($("#select-hashtag-list option[value='" + hashtag_selected + "']").length !== 0) {
+							$("#select-hashtag-list").val(hashtag_selected).change();
+						} else
+							//console.log(hashtag_selected + " not exists");
+							clear_markers();
+					}
+				}
+			);
+		}
+
+		function get_coord_tids_update_map() {
+			$.getJSON("/jquery/get-coord-tid-by-date-ht.json",
+				{ day_or_week: day_or_week,
+					date: date_selected,
+					hashtag: hashtag_selected
+				},
+				function(data) {
+					coord_tids = [];
+					for (var i = 0; i < data.length; i ++) {
+						coord_tids.push([parseFloat(data[i]["longi"]), parseFloat(data[i]["lati"]), data[i]["tid"]]);
+					}
+					coord_tids.sort(function(a,b){
+						// sort by locations and tids, which helps order tweets by time
+						//console.log(a[0] + " " + a[1] + " " + b[0] + " " + b[1]);
+						if (a[0] > b[0]) return 1;
+						else if (a[0] < b[0]) return -1;
+						else if (a[1] > b[1]) return 1;
+						else if (a[1] < b[1]) return -1;
+						else if (a[2] > b[2]) return 1;
+						else if (a[2] < b[2]) return -1;
+						else return 0;
+					});
+					update_div_console_with_coord_tids();
+					reset_markers_with_coord_tids();
+					map_set_center_bounds_to_coord_tids();
+				}
+			);
+		}
+
+		function update_div_console_with_coord_tids() {
+			$("#div-console").empty();
+			for (var i = 0; i < Math.min(coord_tids.length, 10); i ++) {
+				if (i == 9)
+					$("#div-console").append("...<br>");
+				else
+					$("#div-console").append(coord_tids[i][0] + " " + coord_tids[i][1] + " " + coord_tids[i][2] + "<br>");
+			}
+		}
+
+		$.getJSON("/jquery/get-date-list.json",
+			{ day_or_week: day_or_week },
+			function(data) {
+				update_select_date_list(data);
+			}
+		);
+
+		$("#select-date-list").change(function () {
+			$("#select-date-list option:selected").each(function() {
+				date_selected = $(this).attr("value");
+				update_select_hashtag_list();
+			});
+		});
+
+		$("#select-hashtag-list").change(function () {
+			$("#select-hashtag-list option:selected").each(function() {
+				hashtag_selected = $(this).attr("value");
+				get_coord_tids_update_map();
+			});
+		});
+
+		$("#select-hashtag-list").dblclick(function () {
+			//console.log("dblclick");
+			$("#select-hashtag-list option:selected").each(function() {
+				hashtag_selected = $(this).attr("value");
+				map_set_tight_center_bounds_to_coord_tids();
+			});
+		});
+
+		function map_init() {
+			map = new google.maps.Map(document.getElementById("map-canvas"),
+					{maxZoom: 13,
+					mapTypeId: google.maps.MapTypeId.ROADMAP});
+			map_infowindow = new google.maps.InfoWindow({maxWidth: 400});
+			map.setCenter(new google.maps.LatLng(0, 0));
+			map.setZoom(2);
+		}
+
+		function clear_markers() {
+			coord_tids = [];
+			reset_markers_with_coord_tids();
+		}
+
+		function reset_markers_with_coord_tids() {
+			for (var i = 0; i < markers.length; i++ ) {
+				markers[i].setMap(null);
+			}
+			markers = [];
+
+			// offset markers with duplicate coordinate a bit to the right
+			var prev_longi = null;
+			var prev_lati = null;
+			var longi_offset = 0.0;
+			for (var i = 0; i < coord_tids.length; i++) {  
+				if (prev_longi != null && prev_lati != null
+						&& prev_longi == coord_tids[i][0] && prev_lati == coord_tids[i][1])
+					longi_offset += 0.003;
+				else
+					longi_offset = 0.0;
+				prev_longi = coord_tids[i][0];
+				prev_lati = coord_tids[i][1];
+
+				var latlng = new google.maps.LatLng(coord_tids[i][0], coord_tids[i][1] + longi_offset);
+				var marker = new google.maps.Marker({position: latlng});
+				google.maps.event.addListener(marker, "click", function(marker, i) {
+					return function() {
+						$.getJSON("/jquery/get-tweet.json",
+							{ tid: coord_tids[i][2] },
+							function(data) {
+								map_infowindow.setContent(
+									data["created_at"] + " " +
+									data["sn"] + " " +
+									data["text"]);
+								map_infowindow.open(map, marker);
+							});
+					}
+				}(marker, i));
+				markers.push(marker);
+			}
+			// draw duplicate markers by leftmost first
+			markers.reverse();
+
+			if (marker_cluster != null)
+				marker_cluster.clearMarkers();
+			marker_cluster = new MarkerClusterer(map, markers, {maxZoom: 12});
+		}
+
+		function map_set_center_bounds_to_coord_tids() {
+			if (coord_tids.length == 0)
+				return;
+
+			var need_to_move = false;
+			var cur_latlngbounds = map.getBounds();
+			for (var i = 0; i < coord_tids.length; i++) {  
+				if (! cur_latlngbounds.contains(new google.maps.LatLng(coord_tids[i][0], coord_tids[i][1]))) {
+					need_to_move = true;
+					break;
+				}
+			}
+			if (! need_to_move)
+				return;
+
+			var latlngbounds = new google.maps.LatLngBounds();
+			for (var i = 0; i < coord_tids.length; i++) {  
+				var latlng = new google.maps.LatLng(coord_tids[i][0], coord_tids[i][1]);
+				latlngbounds.extend(latlng);
+			}
+			map.setCenter(latlngbounds.getCenter());
+			map.fitBounds(latlngbounds); 
+		}
+
+		function map_set_tight_center_bounds_to_coord_tids() {
+			if (coord_tids.length == 0)
+				return;
+
+			var latlngbounds = new google.maps.LatLngBounds();
+			for (var i = 0; i < coord_tids.length; i++) {  
+				var latlng = new google.maps.LatLng(coord_tids[i][0], coord_tids[i][1]);
+				latlngbounds.extend(latlng);
+			}
+			map.setCenter(latlngbounds.getCenter());
+			map.fitBounds(latlngbounds); 
+		}
+
+		google.maps.event.addDomListener(window, 'load', map_init);
+	});
+</script>
+</body>
+</html>
