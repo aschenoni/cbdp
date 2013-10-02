@@ -1,0 +1,159 @@
+#! /usr/bin/python
+
+import os
+import shutil
+import subprocess
+import sys
+import threading
+import tempfile
+import time
+
+
+def timing(f):
+	def wrap(*args):
+		time1 = time.time()
+		ret = f(*args)
+		time2 = time.time()
+		print '  %s(): %0.3f s' % (f.func_name, (time2 - time1))
+		return ret 
+	return wrap
+
+
+def os_remove_quite(fn):
+	try:
+		os.remove(fn)
+	except OSError as e:
+		if e.errno == 2:
+			pass
+		else:
+			raise
+
+
+def shutil_rmtree_quite(dn):
+	try:
+		shutil.rmtree(dn)
+	except OSError as e:
+		if e.errno == 2:
+			pass
+		else:
+			raise
+
+
+def less_pssh_output(dn):
+	fn_all = dn + "-all"
+	fo = open(fn_all, "w")
+	for f in os.listdir(dn):
+		fn = os.path.join(dn, f)
+		#print fn
+		fo.write("[%s]\n" % fn)
+		fo.write(open(fn).read())
+		fo.write("\n")
+	fo.close()
+	cmd="less -r %s" % fn_all
+	subprocess.call(cmd, shell=True)
+
+
+def pssh(vm_list_fn, msg, cmd):
+	print msg
+	pssh_out_dir = "/tmp/pssh-out"
+	pssh_err_dir = "/tmp/pssh-err"
+	pssh_cmd="pssh --option=\"ForwardAgent yes\" -h %s -l root -o %s -e %s \"%s\"" % (vm_list_fn, pssh_out_dir, pssh_err_dir, cmd)
+	shutil_rmtree_quite(pssh_err_dir)
+	shutil_rmtree_quite(pssh_out_dir)
+	#print pssh_cmd
+	output = subprocess.check_output(pssh_cmd, shell=True)
+	print output
+	less_pssh_output(pssh_err_dir)
+	less_pssh_output(pssh_out_dir)
+
+
+def build_ip_addr_map(fn):
+	hn_ip_map = {}
+	fo = open(fn)
+	while True:
+		line = fo.readline()
+		if not line:
+			break
+		if line[0] == "#":
+			continue
+		tokens = line.split()
+		if len(tokens) == 0:
+			continue
+		#print line
+		ip = tokens[0]
+		hn = tokens[2]
+		hn_ip_map[hn] = ip
+	return hn_ip_map
+
+
+def read_dc_latencies(fn, hn_ip):
+	from_to_lat = {}
+	fo = open(fn)
+	while True:
+		line = fo.readline()
+		if not line:
+			break
+		if line[0] == "#":
+			continue
+		tokens = line.split()
+		if len(tokens) != 3:
+			continue
+		#print line
+		from_ = tokens[0]
+		to = tokens[1]
+		lat = tokens[2]
+		if from_ not in from_to_lat:
+			from_to_lat[from_] = {}
+		from_to_lat[from_][hn_ip[to]] = lat
+	#print from_to_lat
+	return from_to_lat
+
+
+def to_ip_lat_str(ip_lat):
+	s = ""
+	for k, v in ip_lat.items():
+		s += k
+		s += " "
+		s += v
+		s += " "
+	#print "[%s]" % s
+	return s
+
+	
+def thread_insert_lat(hn, ip_lat):
+	#print hn, ip_lat
+	_insert_fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_insert")
+	cmd = "ssh -A root@%s %s %s" % (hn, _insert_fn, to_ip_lat_str(ip_lat))
+	output = subprocess.check_output(cmd, shell=True)
+	print "[%s]" % output
+	#sys.stdout.write(".")
+	#sys.stdout.flush()
+
+
+def insert_lat(from_to_lat):
+	sys.stdout.write("inserting latencies ")
+	sys.stdout.flush()
+	threads = []
+	for k, v in from_to_lat.items():
+		t = threading.Thread(target=thread_insert_lat, args=(k, v, ))
+		threads.append(t)
+		t.start()
+	for t in threads:
+		t.join()
+	print "\n"
+
+
+def main(argv):
+	if len(argv) != 1:
+		sys.exit("Usage: %s" % argv[0])
+
+	conf_dir = os.path.dirname(os.path.abspath(__file__)) + "/../../conf"
+	#vm_list_fn = os.path.join(conf_dir, "vm-list")
+
+	hn_ip = build_ip_addr_map(os.path.join(conf_dir, "etc-hosts"))
+	from_to_lat = read_dc_latencies(os.path.join(conf_dir, "dc-latencies"), hn_ip)
+	insert_lat(from_to_lat)
+
+
+if __name__ == "__main__":
+	sys.exit(main(sys.argv))

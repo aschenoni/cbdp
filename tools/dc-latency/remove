@@ -1,0 +1,73 @@
+#! /usr/bin/python
+
+import os
+import shutil
+import subprocess
+import sys
+import time
+
+
+def timing(f):
+	def wrap(*args):
+		time1 = time.time()
+		ret = f(*args)
+		time2 = time.time()
+		print '  %s(): %0.3f s' % (f.func_name, (time2 - time1))
+		return ret 
+	return wrap
+
+
+def shutil_rmtree_quite(dn):
+	try:
+		shutil.rmtree(dn)
+	except OSError as e:
+		if e.errno == 2:
+			pass
+		else:
+			raise
+
+
+def less_pssh_output(dn):
+	fn_all = dn + "-all"
+	fo = open(fn_all, "w")
+	for f in os.listdir(dn):
+		fn = os.path.join(dn, f)
+		#print fn
+		fo.write("[%s]\n" % fn)
+		fo.write(open(fn).read())
+		fo.write("\n")
+	fo.close()
+	#cmd="less -r %s" % fn_all
+	cmd="cat %s" % fn_all
+	subprocess.call(cmd, shell=True)
+
+
+def pssh(vm_list_fn, msg, cmd):
+	print msg
+	pssh_out_dir = "/tmp/pssh-out"
+	pssh_err_dir = "/tmp/pssh-err"
+	pssh_cmd="pssh --option=\"ForwardAgent yes\" -h %s -l root -o %s -e %s \"%s\"" % (vm_list_fn, pssh_out_dir, pssh_err_dir, cmd)
+	shutil_rmtree_quite(pssh_err_dir)
+	shutil_rmtree_quite(pssh_out_dir)
+	#print pssh_cmd
+	output = subprocess.check_output(pssh_cmd, shell=True)
+	print output
+	print "stderr:"
+	less_pssh_output(pssh_err_dir)
+	print "stdout:"
+	less_pssh_output(pssh_out_dir)
+
+
+def main(argv):
+	if len(argv) != 1:
+		sys.exit("Usage: %s" % argv[0])
+
+	conf_dir = os.path.dirname(os.path.abspath(__file__)) + "/../../conf"
+	vm_list_fn = os.path.join(conf_dir, "vm-list")
+	pssh(vm_list_fn,
+		"removing latencies ...",
+		"tc qdisc del dev eth0 root || true")
+
+
+if __name__ == "__main__":
+	sys.exit(main(sys.argv))
