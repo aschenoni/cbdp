@@ -125,14 +125,12 @@ def thread_insert_lat(hn, ip_lat):
 	_insert_fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_insert")
 	cmd = "ssh -A root@%s %s %s" % (hn, _insert_fn, to_ip_lat_str(ip_lat))
 	output = subprocess.check_output(cmd, shell=True)
-	print "[%s]" % output
+	print "[%s]\n%s" % (hn, output)
 	#sys.stdout.write(".")
 	#sys.stdout.flush()
 
 
 def insert_lat(from_to_lat):
-	sys.stdout.write("inserting latencies ")
-	sys.stdout.flush()
 	threads = []
 	for k, v in from_to_lat.items():
 		t = threading.Thread(target=thread_insert_lat, args=(k, v, ))
