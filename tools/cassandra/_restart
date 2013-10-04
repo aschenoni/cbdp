@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -u
+
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+$BIN_DIR/_stop
+echo
+
+~/work/cassandra/bin/cassandra
