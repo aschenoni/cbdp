@@ -1,0 +1,12 @@
+#!/bin/bash
+
+scp cassandra-topology.properties mdc-s60:work/cassandra/conf &
+scp cassandra-topology.properties mdc-s70:work/cassandra/conf &
+scp cassandra-topology.properties mdc-s80:work/cassandra/conf &
+scp cassandra-topology.properties mdc-p40:work/cassandra/conf &
+scp mdc-s60/cassandra.yaml mdc-s60:work/cassandra/conf &
+scp mdc-s70/cassandra.yaml mdc-s70:work/cassandra/conf &
+scp mdc-s80/cassandra.yaml mdc-s80:work/cassandra/conf &
+scp mdc-p40/cassandra.yaml mdc-p40:work/cassandra/conf &
+
+wait
