@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+set -u
+
+CASS_PID=`ps -ef | grep "org.apache.cassandra.service.CassandraDaemo[n]" | awk '{print $2}'`
+if [ -z $CASS_PID ]
+then
+	echo "No org.apache.cassandra.service.CassandraDaemon to kill."
+	rm -rf /var/lib/cassandra/*
+	exit 0
+fi
+
+# kill and wait till the process is gone
+kill $CASS_PID
+echo -n "TERM signal sent. waiting "
+for ((i = 0; i < 10; i ++)); do
+	if [ `ps -ef | grep "org.apache.cassandra.service.CassandraDaemo[n]" | wc -l` -eq 0 ]; then
+		echo " killed."
+		rm -rf /var/lib/cassandra/*
+		exit 0
+	else
+		echo -n "."
+		sleep 1
+	fi
+done
+echo
+
+echo -n "KILL signal sent. waiting "
+kill -KILL $CASS_PID
+for ((i = 0; i < 10; i ++)); do
+	if [ `ps -ef | grep "org.apache.cassandra.service.CassandraDaemo[n]" | wc -l` -eq 0 ]
+	then
+		echo " killed."
+		rm -rf /var/lib/cassandra/*
+		exit 0
+	else
+		echo -n "."
+		sleep 1
+	fi
+done
+echo
+
+# not killed.
+echo -n "not killed. ??"
+exit 1
