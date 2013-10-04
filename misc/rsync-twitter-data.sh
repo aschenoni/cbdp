@@ -10,7 +10,7 @@ while [ 1 ]; do
 	echo "mdc-p40"
 	time rsync -av --delete /mnt/multidc-data/twitter mdc-p40:/mnt/multidc-data
 	echo
-	SLEEP_SEC=$((2*3600))
+	SLEEP_SEC=3600
 	echo `date`" Sleeping for "$SLEEP_SEC" seconds ..."
 	sleep $SLEEP_SEC
 	echo
