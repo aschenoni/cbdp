@@ -19,7 +19,7 @@ OUT_DIR=/tmp/pssh-out
 rm -rf $ERR_DIR
 rm -rf $OUT_DIR
 
-pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -o $OUT_DIR -e $ERR_DIR $BIN_DIR/_restart_clean
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -o $OUT_DIR -e $ERR_DIR $BIN_DIR/_restart-clean
 
 less_output $ERR_DIR
 less_output $OUT_DIR
