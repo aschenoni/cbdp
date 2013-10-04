@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -u
+
+echo -n "uptime: "
+ps -eo pid,user,etime,args | grep "org.apache.cassandra.service.CassandraDaemo[n]" | awk '{print $3}'
+echo
+
+~/work/cassandra/bin/nodetool status
