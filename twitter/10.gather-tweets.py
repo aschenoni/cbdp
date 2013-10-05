@@ -71,7 +71,7 @@ def _get_statuses_user_timeline(tc, sn, max_id_):
 					sys.stdout.flush()
 					time.sleep(10)
 				print ""
-			elif e.e.code in (502, 503):
+			elif e.e.code in (500, 502, 503):
 				# these errors are Twitter's fault!
 				print "Encountered %i Error. Will retry in %d seconds" % (e.e.code, wait_period)
 				time.sleep(wait_period)
