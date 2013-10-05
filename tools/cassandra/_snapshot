@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+set -u
+
+SNAPSHOT_NO=`~/work/cassandra/bin/nodetool snapshot schema1 | grep "Snapshot directory: " | awk 'BEGIN {FS=" "}{print $3}'`
+
+~/work/cassandra/bin/sstable2json /var/lib/cassandra/data/schema1/users/snapshots/$SNAPSHOT_NO/schema1-users-ic-1-Data.db 2>&1 | grep -v "MemoryMeter uninitialized (jamm not specified as java agent)"
