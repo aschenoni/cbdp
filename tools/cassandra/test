@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+set -u
+
+CQLSH=~/work/cassandra/bin/cqlsh
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+
+$CQLSH -f $BIN_DIR/_test.cql `hostname`
