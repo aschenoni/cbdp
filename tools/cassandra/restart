@@ -25,6 +25,6 @@ less_output $OUT_DIR
 echo
 
 echo "starting ..."
-pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -o $OUT_DIR -e $ERR_DIR -t 60 ~/work/cassandra/bin/cassandra
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -o $OUT_DIR -e $ERR_DIR -t 100 ~/work/cassandra/bin/cassandra
 less_output $ERR_DIR
 less_output $OUT_DIR
