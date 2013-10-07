@@ -6,4 +6,4 @@ then
 	mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
 fi
 
-java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay $@
+java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay `date +'%y%m%d-%H%M%S'`

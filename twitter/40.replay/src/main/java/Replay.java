@@ -1,15 +1,14 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-//import java.util.StringTokenizer;
+
 
 //import com.datastax.driver.core.*;
 //import com.datastax.driver.core.exceptions.*;
-//
-//import joptsimple.OptionParser;
-//import joptsimple.OptionSet;
 
 public class Replay {
 	String _hostname;
@@ -58,24 +57,46 @@ public class Replay {
 		_p_tweets = _FilterLocalDCTweets(_p_tweets);
 	}		
 
-	// TODO
-	void InsertParentTweets() {
+	long SimTimeToRealTimeMilli(Date st_begin, Date rt_begin, Date sim_time) {
 		// 1 week : 1 min = 7 * 24 * 60 : 1 = 10080 : 1
-		double scaling_factor = 10080.0;
+		//double scaling_factor = 10080.0;
+		final double scaling_factor = 100800.0;
+		// sim_time.getTime() - st_begin.getTime() = scaling_factor * (rt - rt_begin.getTime());
+		long rt = (long) ((sim_time.getTime() - st_begin.getTime()) / scaling_factor + rt_begin.getTime());
+		return rt;
+	}
 
-		// TODO: filter out tweets that have parents before the beginning of the
-		// replay period from the filter tool.
-		//
+	void InsertParentTweets(String start_time) throws java.text.ParseException, java.lang.InterruptedException {
+		// st_ : simulated time
+		// rt_ : real time
+		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
+		Date rt_begin = sdf0.parse(start_time);
+		rt_begin = new Date(rt_begin.getTime() + 1000L);
+		Date st_begin = sdf0.parse("130407-000000");
+
+		System.out.println("wait for sync ...");
 		for (Tweet t: _p_tweets) {
-			System.out.println(t.created_at);
+			Date st = sdf0.parse(t.created_at);
+			long rt = SimTimeToRealTimeMilli(st_begin, rt_begin, st);
+			long sleep_time = rt - System.currentTimeMillis();
+			if (sleep_time > 0)
+				Thread.sleep(sleep_time);
+			// TODO: write to cassandra
+			System.out.println("Writing tweet at " + sdf0.format(st) + " " + rt);
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		try {
+			if (args.length != 1) {
+				System.out.println("Usage: Replay cur_datetime");
+				System.out.println("  e.g.: Replay 131007-134856");
+				System.exit(1);
+			}
+			String start_time = args[0];
 			Replay rp = new Replay();
 			rp.ReadTweets();
-			rp.InsertParentTweets();
+			rp.InsertParentTweets(start_time);
 
 //		} catch (NoHostAvailableException e) {
 //			System.err.println("No alive hosts to use: " + e.getMessage());
