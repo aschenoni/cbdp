@@ -57,12 +57,12 @@ public class Replay {
 		_p_tweets = _FilterLocalDCTweets(_p_tweets);
 	}		
 
-	long SimTimeToRealTimeMilli(Date st_begin, Date rt_begin, Date sim_time) {
+	long SimTimeToRealTimeMilli(long st_begin_milli, long rt_begin_milli, Date sim_time) {
 		// 1 week : 1 min = 7 * 24 * 60 : 1 = 10080 : 1
 		//double scaling_factor = 10080.0;
 		final double scaling_factor = 100800.0;
 		// sim_time.getTime() - st_begin.getTime() = scaling_factor * (rt - rt_begin.getTime());
-		long rt = (long) ((sim_time.getTime() - st_begin.getTime()) / scaling_factor + rt_begin.getTime());
+		long rt = (long) ((sim_time.getTime() - st_begin_milli) / scaling_factor + rt_begin_milli);
 		return rt;
 	}
 
@@ -70,19 +70,19 @@ public class Replay {
 		// st_ : simulated time
 		// rt_ : real time
 		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
-		Date rt_begin = sdf0.parse(start_time);
-		rt_begin = new Date(rt_begin.getTime() + 1000L);
-		Date st_begin = sdf0.parse("130407-000000");
+		long rt_begin_milli = sdf0.parse(start_time).getTime() + 1000L;
+		long st_begin_milli = sdf0.parse("130407-000000").getTime();
 
 		System.out.println("wait for sync ...");
 		for (Tweet t: _p_tweets) {
 			Date st = sdf0.parse(t.created_at);
-			long rt = SimTimeToRealTimeMilli(st_begin, rt_begin, st);
+			long rt = SimTimeToRealTimeMilli(st_begin_milli, rt_begin_milli, st);
 			long sleep_time = rt - System.currentTimeMillis();
 			if (sleep_time > 0)
 				Thread.sleep(sleep_time);
 			// TODO: write to cassandra
-			System.out.println("Writing tweet at " + sdf0.format(st) + " " + rt);
+			System.out.println("Writing a parent tweet at " + sdf0.format(st) + " " + rt);
+			//_WriteToCassandra(t);
 		}
 	}
 	
