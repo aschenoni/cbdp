@@ -251,7 +251,9 @@ void _filter_by_date_range(map<string, set<Tweet> >& tweets, const string& date_
 }
 
 
-void _filter_by_children(map<string, set<Tweet> >& parents, const map<long, Tweet>& children) {
+void _filter_parents_with_children(
+		map<string, set<Tweet> >& parents,
+		const map<long, Tweet>& children) {
 	set<long> p_tids_in_children;
 	for (auto c: children)
 		p_tids_in_children.insert(c.second.r_tid);
@@ -274,6 +276,24 @@ void _filter_by_children(map<string, set<Tweet> >& parents, const map<long, Twee
 	}
 	//cout_ << parents.size() << " " << parents_with_children.size() << "\n";
 	parents = parents_with_children;
+}
+
+
+void _filter_children_with_parents(
+		const map<string, set<Tweet> >& parents,
+		map<long, Tweet>& children) {
+	set<long> p_tids;
+	for (auto p_kv: parents)
+		for (auto t: p_kv.second)
+			p_tids.insert(t.tid);
+
+	map<long, Tweet> c_with_parents;
+	for (auto c_kv: children) {
+		if (p_tids.find(c_kv.second.r_tid) != p_tids.end())
+			c_with_parents[c_kv.first] = c_kv.second;
+	}
+	//cout_ << children.size() << " " << c_with_parents.size() << "\n";
+	children = c_with_parents;
 }
 
 
@@ -324,7 +344,7 @@ void parse_json_tweets_write_output(
 	try {
 		//boost::thread::id th_id = boost::this_thread::get_id();
 
-		map<string, set<Tweet> > p_tweets_1;	// parent tweets
+		map<string, set<Tweet> > p_tweets_1;	// all parent tweets gathered by this thread
 		while (true) {
 			boost::scoped_ptr<SnRawData> srd(q.get());
 			if (! srd.get())
@@ -333,7 +353,7 @@ void parse_json_tweets_write_output(
 			//cout_ << th_id << " " << sn << endl;
 			map<string, string*>& fn_data_map = srd->fn_data_map;
 			map<long, Tweet> tweets;
-			map<string, set<Tweet> > p_tweets_2;	// parent tweets
+			map<string, set<Tweet> > p_tweets_2;	// parent tweets from sn
 			for (map<string, string*>::iterator i = fn_data_map.begin(); i != fn_data_map.end(); ++ i) {
 				boost::scoped_ptr<string> data(i->second);
 				read_tweet_json(data.get(), tweets, p_tweets_2);
@@ -343,10 +363,9 @@ void parse_json_tweets_write_output(
 				_fill_in_missing_coord(tweets);
 				_filter(tweets, date_o, date_y);
 
-				// parent tweets are not filtered by date range. keep them as long as
-				// they have corresponding children.
-				//_filter_by_date_range(p_tweets_2, date_o, date_y);
-				_filter_by_children(p_tweets_2, tweets);
+				_filter_by_date_range(p_tweets_2, date_o, date_y);
+				_filter_parents_with_children(p_tweets_2, tweets);
+				_filter_children_with_parents(p_tweets_2, tweets);
 				
 				_write_concise_tweets(out_dir, sn, tweets);
 				//cout_ << th_id << " " << sn << endl;
