@@ -10,6 +10,7 @@ import com.datastax.driver.core.exceptions.*;
 class CassClient {
 	private Session _sess;
 	private SimpleStatement _stmt;
+	private PreparedStatement _stmt_ht_idx;
 
 	CassClient() throws java.net.SocketException {
 		String ip = Util.GetEth0IP();
@@ -18,10 +19,13 @@ class CassClient {
 		_sess= cluster.connect();
 		Metadata metadata = cluster.getMetadata();
 		System.out.println(String.format("Connected to cluster '%s' on %s.", metadata.getClusterName(), metadata.getAllHosts()));
-		_CreateAndUseTweet();
+		_CreateSchema();
+		_stmt_ht_idx = _sess.prepare("INSERT INTO tweet "
+				+ "(tid, sn, created_at_st, created_at_rt, real_coord, longi, lati, text_) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?); ");
 	}
 
-	private void _CreateAndUseTweet() {
+	private void _CreateSchema() {
 		try {
 			_sess.execute("CREATE KEYSPACE pbdp WITH replication = { "
 					+ "'class' : 'NetworkTopologyStrategy', "
@@ -29,8 +33,44 @@ class CassClient {
 					+ "'DC1' : 1, "
 					+ "'DC2' : 1, "
 					+ "'DC3' : 1 }; ");
-		} catch (AlreadyExistsException e) { /* It's ok, ignore */ }
+		} catch (AlreadyExistsException e) {}
 		_sess.execute("use pbdp;");
+
+		try {
+			_sess.execute("CREATE TABLE tweet ("
+					+ "tid bigint, "
+					+ "sn text, "
+					+ "created_at_st text, "
+					+ "created_at_rt bigint, "
+					+ "real_coord boolean, "
+					+ "longi float, "
+					+ "lati float, "
+					+ "text_ text, "
+					+ "PRIMARY KEY (tid) "
+					+ "); ");
+		} catch (AlreadyExistsException e) {}
+	}
+
+	void WriteParentTweet(Tweet t) throws java.lang.InterruptedException {
+		BoundStatement bs = _stmt_ht_idx.bind();
+		bs.bind(t.tid, t.sn, t.created_at, System.currentTimeMillis(), t.real_coord, t.longi, t.lati, t.text);
+		_RunQuery(bs);
+	}
+
+	private void _RunQuery(BoundStatement bs) throws InterruptedException
+	{
+		boolean succeeded = false;
+		do {
+			try {
+				_sess.execute(bs);
+				succeeded = true;
+			} catch (DriverException e) {
+				System.err.println("Error during query: " + e.getMessage());
+				e.printStackTrace();
+				System.out.printf("Retrying in 5 sec...\n");
+				Thread.sleep(5000);
+			}
+		} while (! succeeded);
 	}
 	
 

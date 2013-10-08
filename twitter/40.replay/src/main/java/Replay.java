@@ -84,8 +84,6 @@ public class Replay {
 
 	void InsertParentTweets()
 		throws java.text.ParseException, java.lang.InterruptedException {
-		// st_ : simulated time
-		// rt_ : real time
 		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
 
 		long fw_before = System.currentTimeMillis();
@@ -94,6 +92,8 @@ public class Replay {
 		boolean first_wait = true;
 
 		for (Tweet t: _p_tweets) {
+			// st : simulated time
+			// rt : real time
 			long st = sdf0.parse(t.created_at).getTime();
 			long rt = SimTimeToRealTimeMilli(st);
 			long cur_time = System.currentTimeMillis();
@@ -104,11 +104,14 @@ public class Replay {
 				first_wait = false;
 				long fw_after = System.currentTimeMillis();
 				System.out.println((fw_after - fw_before) + " ms");
+				System.out.print("Writing parent tweets ");
+				System.out.flush();
 			}
-			// TODO: write to cassandra
-			System.out.println("Writing a parent tweet at " + sdf0.format(st) + " " + rt);
-			//_cc.Write(t);
+			_cc.WriteParentTweet(t);
+			System.out.print(".");
+			System.out.flush();
 		}
+		System.out.println("");
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -128,12 +131,8 @@ public class Replay {
 			rp.ReadTweets();
 			rp.InsertParentTweets();
 			System.exit(0);
-
-//		} catch (NoHostAvailableException e) {
-//			System.err.println("No alive hosts to use: " + e.getMessage());
-//			System.exit(1);
 		} catch (Exception e) {
-			System.err.println("Unexpected error: " + e.getMessage());
+			System.err.println("Exception: " + e.getMessage());
 			e.printStackTrace();
 			System.exit(1);
 		}
