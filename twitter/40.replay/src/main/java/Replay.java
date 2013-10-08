@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-//import com.datastax.driver.core.*;
-//import com.datastax.driver.core.exceptions.*;
-
 public class Replay {
 	final double _replay_time;
 	final long _st_begin_milli;
@@ -108,10 +105,47 @@ public class Replay {
 				System.out.flush();
 			}
 			_cc.WriteParentTweet(t);
-			System.out.print(".");
-			System.out.flush();
+			if (sleep_time > 0) {
+				Thread.sleep(sleep_time);
+				System.out.print("s");
+				System.out.flush();
+			} else {
+				System.out.print(".");
+				System.out.flush();
+			}
 		}
 		System.out.println("");
+	}
+
+	static class Writer implements Runnable {
+		private Replay _rp;
+
+		Writer(Replay rp) {
+				_rp = rp;
+		}
+
+		public void run() {
+			try {
+				_rp.InsertParentTweets();
+
+				
+			} catch (Exception e) {
+				System.err.println("Unexpected error: " + e.getMessage());
+				e.printStackTrace();
+				System.exit(1);
+			} 
+		}
+	}
+	
+	static class Reader implements Runnable {
+		public void run() {
+			try {
+			} catch (Exception e) {
+				System.err.println("Unexpected error: " + e.getMessage());
+				e.printStackTrace();
+				System.exit(1);
+			} 
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -129,7 +163,14 @@ public class Replay {
 			int replay_time = Integer.parseInt(args[1]);
 			Replay rp = new Replay(replay_time, start_time);
 			rp.ReadTweets();
-			rp.InsertParentTweets();
+
+			Thread w = new Thread(new Writer(rp));
+			Thread r = new Thread(new Reader());
+			w.start();
+			r.start();
+			w.join();
+			r.join();
+
 			System.exit(0);
 		} catch (Exception e) {
 			System.err.println("Exception: " + e.getMessage());
