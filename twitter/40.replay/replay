@@ -1,9 +1,18 @@
 #!/bin/bash
 
+ARGC=$#
+if [ $ARGC -ne 1 ]; then
+	echo "Usage: "$0" sim_time_in_sec"
+	echo " e.g.: "$0" 30"
+	exit 1
+fi
+
+SIM_TIME=$1
+
 DEF_CLASS_PATH_FILE=.dep-class-path
 if [ ! -f $DEF_CLASS_PATH_FILE ];
 then
 	mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
 fi
 
-java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay `date +'%y%m%d-%H%M%S'`
+java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay `date +'%y%m%d-%H%M%S'` $SIM_TIME

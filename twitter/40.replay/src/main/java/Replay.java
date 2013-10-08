@@ -1,9 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
@@ -11,15 +9,30 @@ import java.util.List;
 //import com.datastax.driver.core.exceptions.*;
 
 public class Replay {
+	final double _replay_time;
+	final long _st_begin_milli;
+	final long _st_end_milli;
+	final long _rt_begin_milli;
 	String _hostname;
 	DC _dc;
 	List<Tweet> _p_tweets;
+	CassClient _cc;
 
-	Replay() throws java.net.UnknownHostException, java.io.FileNotFoundException, java.io.IOException {
+	Replay(long replay_time, String rt_start_time)
+		throws java.net.UnknownHostException, java.io.FileNotFoundException,
+										java.io.IOException, java.text.ParseException {
+		_replay_time = replay_time * 1000.0;
+
+		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
+		_st_begin_milli = sdf0.parse("130407-000000").getTime();
+		_st_end_milli = sdf0.parse("130428-000000").getTime();
+		_rt_begin_milli = sdf0.parse(rt_start_time).getTime() + 4000L;
+
 		java.net.InetAddress addr = java.net.InetAddress.getLocalHost();
 		_hostname = addr.getHostName();
 		//System.out.println(_hostname);
 		_dc = new DC();
+		_cc = new CassClient();
 	}
 
 	List<Tweet> _ReadTweets(String fn)
@@ -57,46 +70,64 @@ public class Replay {
 		_p_tweets = _FilterLocalDCTweets(_p_tweets);
 	}		
 
-	long SimTimeToRealTimeMilli(long st_begin_milli, long rt_begin_milli, Date sim_time) {
-		// 1 week : 1 min = 7 * 24 * 60 : 1 = 10080 : 1
-		//double scaling_factor = 10080.0;
-		final double scaling_factor = 100800.0;
-		// sim_time.getTime() - st_begin.getTime() = scaling_factor * (rt - rt_begin.getTime());
-		long rt = (long) ((sim_time.getTime() - st_begin_milli) / scaling_factor + rt_begin_milli);
+	long SimTimeToRealTimeMilli(long sim_time_milli) {
+		// st_dur = st_end - st_begin = "130428-000000" - "130407-000000"
+		// rt_dur = rt_end - rt_begin = replay_time
+		//
+		// (st - st_begin) / st_dur = (rt - rt_begin) / rt_dur
+		//
+		// rt = (st - st_begin) / st_dur * rt_dur + rt_begin
+		long rt = (long) ( ((double) (sim_time_milli - _st_begin_milli))
+				/ (_st_end_milli - _st_begin_milli) * _replay_time + _rt_begin_milli );
 		return rt;
 	}
 
-	void InsertParentTweets(String start_time) throws java.text.ParseException, java.lang.InterruptedException {
+	void InsertParentTweets()
+		throws java.text.ParseException, java.lang.InterruptedException {
 		// st_ : simulated time
 		// rt_ : real time
 		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
-		long rt_begin_milli = sdf0.parse(start_time).getTime() + 1000L;
-		long st_begin_milli = sdf0.parse("130407-000000").getTime();
 
-		System.out.println("wait for sync ...");
+		long fw_before = System.currentTimeMillis();
+		System.out.print("wait for sync ... ");
+		System.out.flush();
+		boolean first_wait = true;
+
 		for (Tweet t: _p_tweets) {
-			Date st = sdf0.parse(t.created_at);
-			long rt = SimTimeToRealTimeMilli(st_begin_milli, rt_begin_milli, st);
-			long sleep_time = rt - System.currentTimeMillis();
+			long st = sdf0.parse(t.created_at).getTime();
+			long rt = SimTimeToRealTimeMilli(st);
+			long cur_time = System.currentTimeMillis();
+			long sleep_time = rt - cur_time;
 			if (sleep_time > 0)
 				Thread.sleep(sleep_time);
+			if (first_wait) {
+				first_wait = false;
+				long fw_after = System.currentTimeMillis();
+				System.out.println((fw_after - fw_before) + " ms");
+			}
 			// TODO: write to cassandra
 			System.out.println("Writing a parent tweet at " + sdf0.format(st) + " " + rt);
-			//_WriteToCassandra(t);
+			//_cc.Write(t);
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		try {
-			if (args.length != 1) {
-				System.out.println("Usage: Replay cur_datetime");
-				System.out.println("  e.g.: Replay 131007-134856");
+			if (args.length != 2) {
+				System.out.println("Usage: Replay cur_datetime replay_time_in_sec");
+				System.out.println("  e.g.: Replay 131007-134856 10");
 				System.exit(1);
 			}
+
+			// It has to be here. Doesn't work if put in the function GetEth0IP.
+			System.setProperty("java.net.preferIPv4Stack", "true");
+
 			String start_time = args[0];
-			Replay rp = new Replay();
+			int replay_time = Integer.parseInt(args[1]);
+			Replay rp = new Replay(replay_time, start_time);
 			rp.ReadTweets();
-			rp.InsertParentTweets(start_time);
+			rp.InsertParentTweets();
+			System.exit(0);
 
 //		} catch (NoHostAvailableException e) {
 //			System.err.println("No alive hosts to use: " + e.getMessage());
