@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -14,58 +11,20 @@ public class Replay {
 	double _replay_time;
 	int _write_conc;
 	int _read_conc;
-	String _hostname;
 	DC _dc;
-	List<Tweet> _p_tweets;
 	CassClient _cc;
 
 	Replay(String[] args)
 		throws java.net.UnknownHostException, java.io.FileNotFoundException,
 										java.io.IOException, java.text.ParseException {
 		_ParseOptions(args);
-		_hostname = Util.GetHostname();
 		_dc = new DC();
 		_cc = new CassClient();
 	}
 
-	List<Tweet> _ReadTweets(String fn)
-		throws java.io.FileNotFoundException, java.io.IOException {
-		List<Tweet> tweets = new ArrayList<Tweet>();
-		BufferedReader br = new BufferedReader(new FileReader(fn));
-		while (true) {
-			String line0 = br.readLine();
-			if (line0 == null)
-				break;
-			String line1 = br.readLine();
-			if (line1 == null)
-				throw new RuntimeException("Unexpected end of file: [" + line0 + "]");
-			tweets.add(new Tweet(line0, line1));
-		}
-		//System.out.println(tweets.size());
-		return tweets;
-	}
-
-	List<Tweet> _FilterLocalDCTweets(List<Tweet> tweets) {
-		// tweets from the local DC
-		List<Tweet> l_tweets = new ArrayList<Tweet>();
-		for (Tweet t: tweets) {
-			DC.Entry dc_e = _dc.GetClosest(t);
-			if (_hostname.equals(dc_e.hostname))
-				l_tweets.add(t);
-		}
-		System.out.println(tweets.size() + " parent tweets. " + l_tweets.size() + " local.");
-		return l_tweets;
-	}
-	
-	void ReadTweetsFromFiles() throws java.io.FileNotFoundException, java.io.IOException {
-		_p_tweets = _ReadTweets("/mnt/multidc-data/twitter/raw-concise/to-replay/parents");
-		// List<Tweet> c_tweets = _ReadTweets("/mnt/multidc-data/twitter/raw-concise/to-replay/children");;
-		_p_tweets = _FilterLocalDCTweets(_p_tweets);
-	}		
-
 	void WriteTweetsToCass() throws java.lang.InterruptedException {
 		Thread w = new Thread(new TweetWriter(this));
-		Thread r = new Thread(new TweetReader());
+		Thread r = new Thread(new TweetReader(this));
 		w.start();
 		r.start();
 		w.join();
@@ -136,7 +95,6 @@ public class Replay {
 			// It has to be here. Doesn't work if put in the function GetEth0IP.
 			System.setProperty("java.net.preferIPv4Stack", "true");
 			Replay rp = new Replay(args);
-			rp.ReadTweetsFromFiles();
 			rp.WriteTweetsToCass();
 			System.exit(0);
 		} catch (Exception e) {

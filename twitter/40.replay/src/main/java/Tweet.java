@@ -13,6 +13,7 @@ class Tweet {
 	String r_tid;
 	Set<String> hashtags;
 	String text;
+	static final Tweet END_MARKER = new Tweet();
 
 	Tweet() {
 	}
