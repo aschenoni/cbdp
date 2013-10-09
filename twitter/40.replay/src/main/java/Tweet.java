@@ -14,6 +14,9 @@ class Tweet {
 	Set<String> hashtags;
 	String text;
 
+	Tweet() {
+	}
+
 	Tweet(String line0, String line1) {
 		StringTokenizer st = new StringTokenizer(line0);
 		if (! st.hasMoreElements())
@@ -46,4 +49,3 @@ class Tweet {
 		text = line1;
 	}
 }
-

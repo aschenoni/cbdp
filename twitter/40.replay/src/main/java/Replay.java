@@ -78,66 +78,8 @@ public class Replay {
 				/ (_st_end_milli - _st_begin_milli) * _replay_time + _rt_begin_milli );
 		return rt;
 	}
-
-	void InsertParentTweets()
-		throws java.text.ParseException, java.lang.InterruptedException {
-		SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
-
-		long fw_before = System.currentTimeMillis();
-		System.out.print("wait for sync ... ");
-		System.out.flush();
-		boolean first_wait = true;
-
-		for (Tweet t: _p_tweets) {
-			// st : simulated time
-			// rt : real time
-			long st = sdf0.parse(t.created_at).getTime();
-			long rt = SimTimeToRealTimeMilli(st);
-			long cur_time = System.currentTimeMillis();
-			long sleep_time = rt - cur_time;
-			if (sleep_time > 0)
-				Thread.sleep(sleep_time);
-			if (first_wait) {
-				first_wait = false;
-				long fw_after = System.currentTimeMillis();
-				System.out.println((fw_after - fw_before) + " ms");
-				System.out.print("Writing parent tweets ");
-				System.out.flush();
-			}
-			_cc.WriteParentTweet(t);
-			if (sleep_time > 0) {
-				Thread.sleep(sleep_time);
-				System.out.print("s");
-				System.out.flush();
-			} else {
-				System.out.print(".");
-				System.out.flush();
-			}
-		}
-		System.out.println("");
-	}
-
-	static class Writer implements Runnable {
-		private Replay _rp;
-
-		Writer(Replay rp) {
-				_rp = rp;
-		}
-
-		public void run() {
-			try {
-				_rp.InsertParentTweets();
-
-				
-			} catch (Exception e) {
-				System.err.println("Unexpected error: " + e.getMessage());
-				e.printStackTrace();
-				System.exit(1);
-			} 
-		}
-	}
 	
-	static class Reader implements Runnable {
+	static class TweetReader implements Runnable {
 		public void run() {
 			try {
 			} catch (Exception e) {
@@ -164,8 +106,8 @@ public class Replay {
 			Replay rp = new Replay(replay_time, start_time);
 			rp.ReadTweets();
 
-			Thread w = new Thread(new Writer(rp));
-			Thread r = new Thread(new Reader());
+			Thread w = new Thread(new TweetWriter(rp, 10));
+			Thread r = new Thread(new TweetReader());
 			w.start();
 			r.start();
 			w.join();
