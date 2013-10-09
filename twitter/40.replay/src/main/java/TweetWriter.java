@@ -7,20 +7,18 @@ class TweetWriter implements Runnable {
 	private Replay _rp;
 	private BlockingQueue<Tweet> _q;
 	static final Tweet END_MARKER = new Tweet();
-	private int _num_writers;
 
-	TweetWriter(Replay rp, int num_writers) {
+	TweetWriter(Replay rp) {
 		_rp = rp;
 		_q = new ArrayBlockingQueue<Tweet>(1000);
-		_num_writers = num_writers;
 	}
 
 	public void run() {
 		try {
-			Thread reader = new Thread(new ParentTweetReader(_rp, _q, _num_writers));
+			Thread reader = new Thread(new ParentTweetReader(_rp, _q));
 			reader.start();
-			Thread[] writers = new Thread[_num_writers];
-			for (int i = 0; i < _num_writers; ++ i) {
+			Thread[] writers = new Thread[_rp._write_conc];
+			for (int i = 0; i < _rp._write_conc; ++ i) {
 				writers[i] = new Thread(new ParentTweetWriter(_rp, _q));
 				writers[i].start();
 			}
@@ -37,19 +35,17 @@ class TweetWriter implements Runnable {
 	static class ParentTweetReader implements Runnable {
 		private Replay _rp;
 		private BlockingQueue<Tweet> _q;
-		private int _num_writers;
 
-		ParentTweetReader(Replay rp, BlockingQueue<Tweet> q, int num_writers) {
+		ParentTweetReader(Replay rp, BlockingQueue<Tweet> q) {
 			_rp = rp;
 			_q = q;
-			_num_writers = num_writers;
 		}
 
 		public void run() {
 			try {
 				for (Tweet t: _rp._p_tweets)
 					_q.put(t);
-				for (int i = 0; i < _num_writers; ++ i)
+				for (int i = 0; i < _rp._write_conc; ++ i)
 					_q.put(END_MARKER);
 			} catch (Exception e) {
 				System.err.println("Unexpected error: " + e.getMessage());
