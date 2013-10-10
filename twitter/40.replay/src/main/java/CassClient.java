@@ -51,7 +51,7 @@ class CassClient {
 		} catch (AlreadyExistsException e) {}
 	}
 
-	void WriteParentTweet(ParentTweet t) throws java.lang.InterruptedException {
+	void WriteParentTweet(TweetWriter.ParentTweet t) throws java.lang.InterruptedException {
 		BoundStatement bs = _stmt_ht_idx.bind();
 		bs.bind(t.tid, t.sn, t.created_at, System.currentTimeMillis(), t.real_coord, t.longi, t.lati, t.text);
 		_RunQuery(bs);
