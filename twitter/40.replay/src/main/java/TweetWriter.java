@@ -7,7 +7,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 class TweetWriter implements Runnable {
 	private Replay _rp;
-	static Tweet _first_tweet = null;
+	static ParentTweet _first_tweet = null;
 
 	TweetWriter(Replay rp) {
 		_rp = rp;
@@ -15,7 +15,7 @@ class TweetWriter implements Runnable {
 
 	public void run() {
 		try {
-			BlockingQueue<Tweet> q = new ArrayBlockingQueue<Tweet>(_rp._write_conc * 100);
+			BlockingQueue<ParentTweet> q = new ArrayBlockingQueue<ParentTweet>(_rp._write_conc * 100);
 			Thread reader = new Thread(new ParentTweetReader(_rp, q));
 			reader.start();
 			Thread[] writers = new Thread[_rp._write_conc];
@@ -35,9 +35,9 @@ class TweetWriter implements Runnable {
 
 	static class ParentTweetReader implements Runnable {
 		private Replay _rp;
-		private BlockingQueue<Tweet> _q;
+		private BlockingQueue<ParentTweet> _q;
 
-		ParentTweetReader(Replay rp, BlockingQueue<Tweet> q) {
+		ParentTweetReader(Replay rp, BlockingQueue<ParentTweet> q) {
 			_rp = rp;
 			_q = q;
 		}
@@ -53,7 +53,7 @@ class TweetWriter implements Runnable {
 					String line1 = br.readLine();
 					if (line1 == null)
 						throw new RuntimeException("Unexpected end of file: [" + line0 + "]");
-					Tweet t = new Tweet(line0, line1);
+					ParentTweet t = new ParentTweet(line0, line1);
 					if (! _rp._dc.IsLocal(t.lati, t.longi))
 						continue;
 					if (_first_tweet == null)
@@ -61,7 +61,7 @@ class TweetWriter implements Runnable {
 					_q.put(t);
 				}
 				for (int i = 0; i < _rp._write_conc; ++ i)
-					_q.put(Tweet.END_MARKER);
+					_q.put(ParentTweet.END_MARKER);
 			} catch (Exception e) {
 				System.err.println("Unexpected error: " + e.getMessage());
 				e.printStackTrace();
@@ -71,10 +71,10 @@ class TweetWriter implements Runnable {
 	}
 
 	static class ParentTweetWriter implements Runnable {
-		private BlockingQueue<Tweet> _q;
+		private BlockingQueue<ParentTweet> _q;
 		private Replay _rp;
 
-		ParentTweetWriter(Replay rp, BlockingQueue<Tweet> q) {
+		ParentTweetWriter(Replay rp, BlockingQueue<ParentTweet> q) {
 			_rp = rp;
 			_q = q;
 		}
@@ -84,8 +84,8 @@ class TweetWriter implements Runnable {
 				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
 
 				while (true) {
-					Tweet t = _q.take();
-					if (t == Tweet.END_MARKER)
+					ParentTweet t = _q.take();
+					if (t == ParentTweet.END_MARKER)
 						break;
 					long st = sdf0.parse(t.created_at).getTime();
 					long rt = _rp.SimTimeToRealTimeMilli(st);

@@ -2,7 +2,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-class Tweet {
+class ParentTweet {
 	long tid;
 	String sn;
 	String created_at;
@@ -13,12 +13,12 @@ class Tweet {
 	String r_tid;
 	Set<String> hashtags;
 	String text;
-	static final Tweet END_MARKER = new Tweet();
+	static final ParentTweet END_MARKER = new ParentTweet();
 
-	Tweet() {
+	ParentTweet() {
 	}
 
-	Tweet(String line0, String line1) {
+	ParentTweet(String line0, String line1) {
 		StringTokenizer st = new StringTokenizer(line0);
 		if (! st.hasMoreElements())
 			throw new RuntimeException("Unexpected format line0: " + line0);

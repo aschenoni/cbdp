@@ -22,7 +22,7 @@ public class Replay {
 		_cc = new CassClient();
 	}
 
-	void WriteTweetsToCass() throws java.lang.InterruptedException {
+	void Start() throws java.lang.InterruptedException {
 		Thread w = new Thread(new TweetWriter(this));
 		Thread r = new Thread(new TweetReader(this));
 		w.start();
@@ -80,14 +80,21 @@ public class Replay {
 			_PrintHelp();
 			System.exit(1);
 		}
+		String ctime = (String) nonop_args.get(0);
+		System.out.println(ctime);
+
 		_rt_begin_milli = sdf0.parse((String) nonop_args.get(0)).getTime() + 4000L;
 		_st_begin_milli = sdf0.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf0.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime") * 1000.0;
 		_write_conc = (Integer)options.valueOf("wc");
 		_read_conc = (Integer)options.valueOf("rc");
-		//System.out.printf("%d %d %d %f %d %d\n",
-		//		_rt_begin_milli, _st_begin_milli, _st_end_milli, _replay_time, _write_conc, _read_conc);
+		long cur_time = System.currentTimeMillis();
+		System.out.printf("_st_begin_milli: %s %d\n", sdf0.format(_st_begin_milli), _st_begin_milli);
+		System.out.printf("_st_end_milli:   %s %d\n", sdf0.format(_st_end_milli), _st_end_milli);
+		System.out.printf("_rt_begin_milli: %s %d\n", sdf0.format(_rt_begin_milli), _rt_begin_milli);
+		System.out.printf("cur time:        %s %d\n", sdf0.format(cur_time), cur_time);
+		System.out.printf("_replay_time:    %f\n", _replay_time);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -95,7 +102,7 @@ public class Replay {
 			// It has to be here. Doesn't work if put in the function GetEth0IP.
 			System.setProperty("java.net.preferIPv4Stack", "true");
 			Replay rp = new Replay(args);
-			rp.WriteTweetsToCass();
+			rp.Start();
 			System.exit(0);
 		} catch (Exception e) {
 			System.err.println("Exception: " + e.getMessage());
