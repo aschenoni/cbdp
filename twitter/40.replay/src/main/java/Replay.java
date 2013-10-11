@@ -9,6 +9,7 @@ public class Replay {
 	long _st_begin_milli;
 	long _st_end_milli;
 	double _replay_time;
+	double _replay_time_sf;	// speed-up factor
 	int _write_conc;
 	int _read_conc;
 	DC _dc;
@@ -31,7 +32,7 @@ public class Replay {
 		r.join();
 	}
 	
-	long SimTimeToRealTimeMilli(long sim_time_milli) {
+	long SimTimeToRealTime(long sim_time_milli) {
 		// st_dur = st_end - st_begin = "130428-000000" - "130407-000000"
 		// rt_dur = rt_end - rt_begin = replay_time
 		//
@@ -87,6 +88,7 @@ public class Replay {
 		_st_begin_milli = sdf0.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf0.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime") * 1000.0;
+		_replay_time_sf = (_st_end_milli - _st_begin_milli) / _replay_time;
 		_write_conc = (Integer)options.valueOf("wc");
 		_read_conc = (Integer)options.valueOf("rc");
 		long cur_time = System.currentTimeMillis();

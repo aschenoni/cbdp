@@ -91,7 +91,7 @@ class TweetWriter implements Runnable {
 					if (t == ParentTweet.END_MARKER)
 						break;
 					long st = sdf0.parse(t.created_at).getTime();
-					long rt = _rp.SimTimeToRealTimeMilli(st);
+					long rt = _rp.SimTimeToRealTime(st);
 					long cur_time = System.currentTimeMillis();
 					long sleep_time = rt - cur_time;
 					if (t == _first_tweet)
