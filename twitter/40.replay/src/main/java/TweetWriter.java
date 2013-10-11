@@ -26,9 +26,10 @@ class TweetWriter implements Runnable {
 				writers[i] = new Thread(new ParentTweetWriter(_rp, q));
 				writers[i].start();
 			}
+			reader.join();
 			for (Thread w: writers)
 				w.join();
-			reader.join();
+			System.out.println("\nWrite: " + ParentTweetWriter._cnt);
 		} catch (Exception e) {
 			System.err.println("Unexpected error: " + e.getMessage());
 			e.printStackTrace();
@@ -76,6 +77,7 @@ class TweetWriter implements Runnable {
 	static class ParentTweetWriter implements Runnable {
 		private BlockingQueue<ParentTweet> _q;
 		private Replay _rp;
+		static private Integer _cnt = 0;	// successful write cnt
 
 		ParentTweetWriter(Replay rp, BlockingQueue<ParentTweet> q) {
 			_rp = rp;
@@ -85,6 +87,7 @@ class TweetWriter implements Runnable {
 		public void run() {
 			try {
 				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
+				int cnt = 0;
 
 				while (true) {
 					ParentTweet t = _q.take();
@@ -99,6 +102,7 @@ class TweetWriter implements Runnable {
 					if (sleep_time > 0)
 						Thread.sleep(sleep_time);
 					_rp._cc.WriteParentTweet(t);
+					cnt ++;
 					if (sleep_time > 0) {
 						System.out.print("w");
 						System.out.flush();
@@ -107,10 +111,17 @@ class TweetWriter implements Runnable {
 						System.out.flush();
 					}
 				}
+				_UpdateCnt(cnt);
 			} catch (Exception e) {
 				System.err.println("Unexpected error: " + e.getMessage());
 				e.printStackTrace();
 				System.exit(1);
+			}
+		}
+
+		void _UpdateCnt(int cnt) {
+			synchronized(_cnt) {
+				_cnt += cnt;
 			}
 		}
 	}

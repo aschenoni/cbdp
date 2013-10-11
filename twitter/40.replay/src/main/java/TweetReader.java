@@ -30,6 +30,9 @@ class TweetReader implements Runnable {
 			file_reader.join();
 			for (Thread c: cass_readers)
 				c.join();
+			System.out.println("\nRead: total: " + (ReadFromCass._cnt_s + ReadFromCass._cnt_nt)
+					+ " successful: " + ReadFromCass._cnt_s
+					+ " not there yet: " + ReadFromCass._cnt_nt);
 		} catch (Exception e) {
 			System.err.println("Unexpected error: " + e.getMessage());
 			e.printStackTrace();
@@ -121,6 +124,8 @@ class TweetReader implements Runnable {
 	static class ReadFromCass implements Runnable {
 		private Replay _rp;
 		private BlockingQueue<ChildTweet> _q;
+		static private Integer _cnt_s = 0;	// successful read cnt
+		static private Integer _cnt_nt = 0;	// requested tweet not there yet
 
 		ReadFromCass(Replay rp,
 				BlockingQueue<ChildTweet> q) {
@@ -131,6 +136,8 @@ class TweetReader implements Runnable {
 		public void run() {
 			try {
 				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
+				int cnt_s = 0;	// successful read cnt
+				int cnt_nt = 0;	// requested tweet not there yet
 
 				while (true) {
 					ChildTweet t = _q.take();
@@ -146,17 +153,20 @@ class TweetReader implements Runnable {
 						Thread.sleep(sleep_time);
 					List<ParentTweetFromCass> rows = _rp._cc.ReadParentTweet(t.r_tid);
 					if (rows.size() == 0) {
-						// TODO:
-						System.out.println("the record is not there yet");
+						// the record is not there yet
+						cnt_nt ++;
 					} else if (rows.size() == 1) {
 						// TODO: compare the rt and current time.
 						long created_at_rt = rows.get(0).created_at_rt;
 
 						// created_at_rt should be younger than rt_begin_milli. Otherwise,
 						// it must be from the previous experiments.
-						if (created_at_rt < _rp._rt_begin_milli)
-							System.out.println("the record is not there yet");
+						if (created_at_rt < _rp._rt_begin_milli) {
+							// the record is not there yet
+							cnt_nt ++;
+						}
 						else {
+							cnt_s ++;
 							// out of curiosity, how much time difference between current time and the read time
 							//long c_rt = System.currentTimeMillis();
 							//long diff = c_rt - rt;
@@ -196,10 +206,20 @@ class TweetReader implements Runnable {
 					//
 					// TODO: what if it's not there?
 				}
+				_UpdateCnt(cnt_s, cnt_nt);
 			} catch (Exception e) {
 				System.err.println("Unexpected error: " + e.getMessage());
 				e.printStackTrace();
 				System.exit(1);
+			}
+		}
+
+		void _UpdateCnt(int cnt_s, int cnt_nt) {
+			synchronized(_cnt_s) {
+				_cnt_s += cnt_s;
+			}
+			synchronized(_cnt_nt) {
+				_cnt_nt += cnt_nt;
 			}
 		}
 	}
