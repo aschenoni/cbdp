@@ -291,12 +291,7 @@ private:
 		ss.str(string());
 
 		int cnt90 = (int) (cnt * 0.9);
-		sum = 0;
-		for (int i = 0; i < cnt90; ++ i) {
-			sum += durs[i];
-		}
-		avg = (float) sum / cnt90;
-		ss << avg;
+		ss << durs[cnt90];
 		r90 = ss.str();
 	}
 
