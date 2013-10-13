@@ -19,8 +19,9 @@ set ytics ( \
 		"5 sec" 5, \
 		"30 secs" 30, \
 		"1 min" 60, \
-		"20 mins" 20 * 60, \
+		"10 mins" 10 * 60, \
 		"1 hour" 60 * 60, \
+		"3 hours" 3 * 60 * 60, \
 		"12 hours" 12 * 60 * 60, \
 		"1 day" 24 * 60 * 60, \
 		"5 days" 5 * 24 * 60 * 60, \
@@ -42,4 +43,5 @@ set pointsize 0.1
 plot \
 INFILE u 2:3 w points lt 7 lc rgb "#00FF00" not, \
 ""     u 2:4 w lines lw 5 lc rgb "#FF0000" smooth bezier title "24-h mean", \
-""     u 2:5 w lines lw 5 lc rgb "#0000FF" smooth bezier title "24-h 90th percentile"
+""     u 2:5 w lines lw 5 lc rgb "#228B22" smooth bezier title "24-h 95th percentile", \
+""     u 2:6 w lines lw 5 lc rgb "#0000FF" smooth bezier title "24-h 99th percentile"

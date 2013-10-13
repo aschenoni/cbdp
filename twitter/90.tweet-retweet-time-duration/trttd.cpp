@@ -160,7 +160,8 @@ class TimeDurs {
 		boost::posix_time::ptime p_ca_ptime;
 		vector<long> durs;	// in sec
 		string ravg; // running avg
-		string r90; // running 90th percentile
+		string r95; // running 95th percentile
+		string r99;
 
 	private:
 		boost::posix_time::ptime ptime_(int y, int m, int d, int h, int min, int s) {
@@ -188,7 +189,7 @@ class TimeDurs {
 				long p_tid_,
 				const string& p_ca_,
 				const string& c_ca)
-			: p_tid(p_tid_), p_ca(p_ca_), ravg("-"), r90("-") {
+			: p_tid(p_tid_), p_ca(p_ca_), ravg("-"), r95("-"), r99("-") {
 				p_ca_ptime = ptime_(
 						p_ca.substr(0, 2),
 						p_ca.substr(2, 2),
@@ -270,7 +271,7 @@ private:
 			<< "\n";
 	}
 
-	void _CalcStat(const vector<int>& durs_, string& ravg, string& r90) {
+	void _CalcStat(const vector<int>& durs_, string& ravg, string& r95, string& r99) {
 		vector<int> durs(durs_);
 		sort(durs.begin(), durs.end());
 
@@ -288,11 +289,15 @@ private:
 		ss.precision(0);
 		ss << avg;
 		ravg = ss.str();
-		ss.str(string());
 
-		int cnt90 = (int) (cnt * 0.9);
+		int cnt90 = (int) (cnt * 0.95);
+		ss.str(string());
 		ss << durs[cnt90];
-		r90 = ss.str();
+		r95 = ss.str();
+		int cnt99 = (int) (cnt * 0.99);
+		ss.str(string());
+		ss << durs[cnt99];
+		r99 = ss.str();
 	}
 
 	// 1-hr running avg, 90, 95, 99 percentile.
@@ -319,7 +324,7 @@ private:
 						durs.push_back(d);
 				}
 			}
-			_CalcStat(durs, e.second->ravg, e.second->r90);
+			_CalcStat(durs, e.second->ravg, e.second->r95, e.second->r99);
 		}
 	}
 	
@@ -382,7 +387,7 @@ std::ostream& operator<< (std::ostream& os, const TimeDurs::Entry& e) {
 	os.precision(0);
 	os.setf(ios::fixed, ios::floatfield);
 	for (auto d: e.durs)
-		os << e.p_tid << " " << e.p_ca << " " << d << " " << e.ravg << " " << e.r90 << "\n";
+		os << e.p_tid << " " << e.p_ca << " " << d << " " << e.ravg << " " << e.r95 << " " << e.r99 << "\n";
 	return os;
 }
 
