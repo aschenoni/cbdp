@@ -80,7 +80,7 @@ ostream& operator<< (ostream& os, const Tweet& t) {
 
 map<long, Tweet*> read_parent_tweets(string fn) {
 	map<long, Tweet*> tweets;
-	ifstream ifs(fn);
+	ifstream ifs(fn.c_str());
 	if (! ifs.good())
 		throw runtime_error(str(boost::format("unable to read file %1%") % fn));
 	string line;
@@ -116,7 +116,7 @@ map<long, Tweet*> read_parent_tweets(string fn) {
 
 vector<Tweet*> read_child_tweets(string fn) {
 	vector<Tweet*> tweets;
-	ifstream ifs(fn);
+	ifstream ifs(fn.c_str());
 	if (! ifs.good())
 		throw runtime_error(str(boost::format("unable to read file %1%") % fn));
 	string line;
@@ -159,6 +159,7 @@ class TimeDurs {
 		string p_ca;	// created_at
 		boost::posix_time::ptime p_ca_ptime;
 		vector<long> durs;	// in sec
+		string ravg; // running avg (of the last 24 hours)
 
 	private:
 		boost::posix_time::ptime ptime_(int y, int m, int d, int h, int min, int s) {
@@ -186,7 +187,7 @@ class TimeDurs {
 				long p_tid_,
 				const string& p_ca_,
 				const string& c_ca)
-			: p_tid(p_tid_), p_ca(p_ca_) {
+			: p_tid(p_tid_), p_ca(p_ca_), ravg("-") {
 				p_ca_ptime = ptime_(
 						p_ca.substr(0, 2),
 						p_ca.substr(2, 2),
@@ -267,6 +268,44 @@ private:
 			<< " sd=" << sd 
 			<< "\n";
 	}
+
+	// 1-hr running avg, 90, 95, 99 percentile.
+	void _GenRunningStat() {
+		bool first = true;
+		boost::posix_time::ptime start_ca;
+		int time_window_hour = 12;
+
+		for (auto e: _entries) {
+			if (first) {
+				first = false;
+				start_ca = e.second->p_ca_ptime + boost::posix_time::hours(time_window_hour);
+			}
+			const boost::posix_time::ptime& cur_ca = e.second->p_ca_ptime;
+			if (start_ca > cur_ca)
+				continue;
+			boost::posix_time::ptime cur_ca_minus_time_window = cur_ca - boost::posix_time::hours(time_window_hour);
+			// not efficient but should be okay
+
+			int cnt = 0;
+			int sum = 0;
+			for (auto e1: _entries) {
+				if (cur_ca_minus_time_window <= e1.second->p_ca_ptime
+					&& e1.second->p_ca_ptime < cur_ca) {
+					for (long d: e1.second->durs) {
+						++ cnt;
+						sum += d;
+					}
+				}
+			}
+			float avg = (float) sum / cnt;
+			//cout << cnt << " " << sum << " " << avg << "\n";
+			stringstream ss;
+			ss.setf(ios::fixed, ios::floatfield);
+			ss.precision(0);
+			ss << avg;
+			e.second->ravg = ss.str();
+		}
+	}
 	
 public:
 	TimeDurs(
@@ -279,6 +318,7 @@ public:
 				throw runtime_error(str(boost::format("unable to read parent tweet %1%") % c->r_tid));
 			_Add(it->first, it->second->created_at, c->created_at);
 		}
+		_GenRunningStat();
 	}
 
 	~TimeDurs() {
@@ -287,7 +327,7 @@ public:
 	}
 
 	void WriteAll(const string& fn) {
-		ofstream ofs(fn);
+		ofstream ofs(fn.c_str());
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
 		_WriteStat(ofs);
@@ -313,7 +353,7 @@ public:
 				}
 			}
 		}
-		ofstream ofs(fn);
+		ofstream ofs(fn.c_str());
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
 		ofs << "# bucket size=" << bs << "\n";
@@ -323,8 +363,10 @@ public:
 };
 
 std::ostream& operator<< (std::ostream& os, const TimeDurs::Entry& e) {
+	os.precision(0);
+	os.setf(ios::fixed, ios::floatfield);
 	for (auto d: e.durs)
-		os << e.p_tid << " " << e.p_ca << " " << d << "\n";
+		os << e.p_tid << " " << e.p_ca << " " << d << " " << e.ravg << "\n";
 	return os;
 }
 
@@ -336,7 +378,7 @@ int main(int argc, char* argv[]) {
 		string p_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/parents";
 		string c_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/children";
 		string out_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration";
-		string out_hist_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-hist";
+		string out_hist_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo";
 
 		map<long, Tweet*> p_tweets = read_parent_tweets(p_fn);
 		vector<Tweet*> c_tweets = read_child_tweets(c_fn);
