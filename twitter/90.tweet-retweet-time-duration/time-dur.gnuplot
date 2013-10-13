@@ -40,7 +40,6 @@ set output OUTFILE
 set pointsize 0.1
 
 plot \
-INFILE u 2:3 w points lt 7 lc rgb "#0000FF" not, \
-""     u 2:4 w lines lw 5 lc rgb "#00FF00" smooth bezier title "24-h mean"
-
-#""     u 2:3 w lines smooth bezier lw 5 lc rgb "#FF0000" title "mean", \
+INFILE u 2:3 w points lt 7 lc rgb "#00FF00" not, \
+""     u 2:4 w lines lw 5 lc rgb "#FF0000" smooth bezier title "24-h mean", \
+""     u 2:5 w lines lw 5 lc rgb "#0000FF" smooth bezier title "24-h 90th percentile"

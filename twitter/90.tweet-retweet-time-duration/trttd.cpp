@@ -159,7 +159,8 @@ class TimeDurs {
 		string p_ca;	// created_at
 		boost::posix_time::ptime p_ca_ptime;
 		vector<long> durs;	// in sec
-		string ravg; // running avg (of the last 24 hours)
+		string ravg; // running avg
+		string r90; // running 90th percentile
 
 	private:
 		boost::posix_time::ptime ptime_(int y, int m, int d, int h, int min, int s) {
@@ -187,7 +188,7 @@ class TimeDurs {
 				long p_tid_,
 				const string& p_ca_,
 				const string& c_ca)
-			: p_tid(p_tid_), p_ca(p_ca_), ravg("-") {
+			: p_tid(p_tid_), p_ca(p_ca_), ravg("-"), r90("-") {
 				p_ca_ptime = ptime_(
 						p_ca.substr(0, 2),
 						p_ca.substr(2, 2),
@@ -269,6 +270,36 @@ private:
 			<< "\n";
 	}
 
+	void _CalcStat(const vector<int>& durs_, string& ravg, string& r90) {
+		vector<int> durs(durs_);
+		sort(durs.begin(), durs.end());
+
+		int cnt = 0;
+		int sum = 0;
+		// not the most efficient way. can be optimized later.
+		for (int d: durs) {
+			++ cnt;
+			sum += d;
+		}
+		float avg = (float) sum / cnt;
+		//cout << cnt << " " << sum << " " << avg << "\n";
+		stringstream ss;
+		ss.setf(ios::fixed, ios::floatfield);
+		ss.precision(0);
+		ss << avg;
+		ravg = ss.str();
+		ss.str(string());
+
+		int cnt90 = (int) (cnt * 0.9);
+		sum = 0;
+		for (int i = 0; i < cnt90; ++ i) {
+			sum += durs[i];
+		}
+		avg = (float) sum / cnt90;
+		ss << avg;
+		r90 = ss.str();
+	}
+
 	// 1-hr running avg, 90, 95, 99 percentile.
 	void _GenRunningStat() {
 		bool first = true;
@@ -284,26 +315,16 @@ private:
 			if (start_ca > cur_ca)
 				continue;
 			boost::posix_time::ptime cur_ca_minus_time_window = cur_ca - boost::posix_time::hours(time_window_hour);
-			// not efficient but should be okay
 
-			int cnt = 0;
-			int sum = 0;
+			vector<int> durs;
 			for (auto e1: _entries) {
 				if (cur_ca_minus_time_window <= e1.second->p_ca_ptime
 					&& e1.second->p_ca_ptime < cur_ca) {
-					for (long d: e1.second->durs) {
-						++ cnt;
-						sum += d;
-					}
+					for (long d: e1.second->durs)
+						durs.push_back(d);
 				}
 			}
-			float avg = (float) sum / cnt;
-			//cout << cnt << " " << sum << " " << avg << "\n";
-			stringstream ss;
-			ss.setf(ios::fixed, ios::floatfield);
-			ss.precision(0);
-			ss << avg;
-			e.second->ravg = ss.str();
+			_CalcStat(durs, e.second->ravg, e.second->r90);
 		}
 	}
 	
@@ -366,7 +387,7 @@ std::ostream& operator<< (std::ostream& os, const TimeDurs::Entry& e) {
 	os.precision(0);
 	os.setf(ios::fixed, ios::floatfield);
 	for (auto d: e.durs)
-		os << e.p_tid << " " << e.p_ca << " " << d << " " << e.ravg << "\n";
+		os << e.p_tid << " " << e.p_ca << " " << d << " " << e.ravg << " " << e.r90 << "\n";
 	return os;
 }
 
