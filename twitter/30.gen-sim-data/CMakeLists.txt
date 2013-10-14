@@ -12,5 +12,5 @@ ENDIF()
 FIND_PACKAGE(Boost COMPONENTS system filesystem timer regex REQUIRED)
 
 INCLUDE_DIRECTORIES (${Boost_INCLUDE_DIRS})
-ADD_EXECUTABLE ( gensim gensim.cpp util.cpp )
+ADD_EXECUTABLE ( gensim gensim.cpp childtweet.cpp util.cpp )
 TARGET_LINK_LIBRARIES (gensim ${Boost_LIBRARIES})
