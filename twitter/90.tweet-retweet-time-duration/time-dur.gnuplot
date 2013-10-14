@@ -1,6 +1,4 @@
-# Tested with gnuplot 4.6 patchlevel 3
-
-set key under nobox
+# Tested with gnuplot 4.6 patchlevel 1 on Ubuntu 13.04
 
 set border back lc rgb "#808080"
 set ylabel "parent to child time durations (in sec)"
@@ -39,6 +37,8 @@ set terminal pdf enhanced size 5.50in, 4.125in
 OUTFILE = INFILE . ".pdf"
 set output OUTFILE
 set pointsize 0.1
+
+set key under nobox width -6 maxrows 1 font ",8"
 
 plot \
 INFILE u 2:3 w points lt 7 lc rgb "#00FF00" not, \
