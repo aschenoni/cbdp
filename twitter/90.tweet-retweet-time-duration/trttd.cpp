@@ -358,28 +358,37 @@ public:
 			ofs << *(e.second);
 	}
 
-	void WriteHisto(const string& fn) {
-		const int bs = 100;	// bucket size
+	void WriteHisto(
+			const string& fn,
+			const int bucket_size_in_hour,
+			const int max_num_buckets = -1) {
+		int bs = bucket_size_in_hour * 3600;
 		// range, cnt
 		//   range: [i*bs, (i+1)*bs)
-		map<int, int> histo;
+		map<int, double> histo;
+		int total_cnt = 0;
 		for (auto e: _entries) {
 			for (long d: e.second->durs) {
 				int bucket = d / bs;
 				auto it = histo.find(bucket);
 				if (it == histo.end()) {
-					histo[bucket] = 1;
+					histo[bucket] = 1.0;
 				} else {
-					++ it->second;
+					it->second += 1.0;
 				}
+				++ total_cnt;
 			}
 		}
-		ofstream ofs(fn.c_str());
+		for (auto& h: histo)
+			h.second /= total_cnt;
+		ofstream ofs((str(boost::format("%1%-%2%") % fn % bucket_size_in_hour)).c_str());
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-		ofs << "# bucket size=" << bs << "\n";
-		for (auto h: histo)
-			ofs << h.first << " " << h.second << "\n";
+		ofs << "# bucket size=" << bucket_size_in_hour << "\n";
+		for (auto h: histo) {
+			if (max_num_buckets == -1 || h.first < max_num_buckets)
+				ofs << (h.first * bucket_size_in_hour) << " " << h.second << "\n";
+		}
 	}
 };
 
@@ -405,7 +414,8 @@ int main(int argc, char* argv[]) {
 		vector<Tweet*> c_tweets = read_child_tweets(c_fn);
 		TimeDurs td(p_tweets, c_tweets);
 		td.WriteAll(out_fn);
-		td.WriteHisto(out_hist_fn);
+		td.WriteHisto(out_hist_fn, 24, 24);
+		td.WriteHisto(out_hist_fn, 1, 24);
 
 		// free p_tweets and c_tweets. okay for a one-time tool.
 

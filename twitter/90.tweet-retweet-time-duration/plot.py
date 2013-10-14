@@ -25,7 +25,12 @@ def Plot():
 
 	cmd = "gnuplot time-dur-histo.gnuplot"
 	env = os.environ.copy()
-	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo"
+	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo-24"
+	env["BUCKET_SIZE"] = "24"
+	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
+
+	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo-1"
+	env["BUCKET_SIZE"] = "1"
 	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
 
 
