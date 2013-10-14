@@ -20,7 +20,7 @@ set pointsize 0.3
 set style fill solid 0.4 noborder
 BOXWIDTH=0.6 * BS
 
-set xtics rotate by 90 right font ",5"
+set xtics rotate by 90 right font ",10"
 
 set title ""
 
