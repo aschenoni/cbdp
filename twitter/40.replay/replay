@@ -1,5 +1,9 @@
 #!/bin/bash
 
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+
+pushd $BIN_DIR > /dev/null
+
 DEF_CLASS_PATH_FILE=.dep-class-path
 if [ ! -f $DEF_CLASS_PATH_FILE ];
 then
@@ -7,3 +11,5 @@ then
 fi
 
 java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay `date +'%y%m%d-%H%M%S'` $@
+
+popd > /dev/null
