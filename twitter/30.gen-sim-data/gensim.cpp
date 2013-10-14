@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <execinfo.h>
 #include "childtweet.h"
+#include "parenttweet.h"
 #include "util.h"
 
 using namespace std;
@@ -32,60 +33,10 @@ void on_signal(int sig) {
 }
 
 
-class Tweet {
-public:
-	long tid;
-	string sn;
-	string created_at;
-	bool real_coord;
-	string lati;
-	string longi;
-	string in_reply_to;
-	long r_tid;
-	string hashtags;
-	string text;
-
-	Tweet(long tid_, const string& sn_, string& created_at_, bool real_coord_, string& lati_, string& longi_,
-			string& in_reply_to_, long r_tid_, string& hashtags_, string& text_)
-		: tid(tid_), 
-		sn(sn_),
-		created_at(created_at_), 
-		real_coord(real_coord_), 
-		lati(lati_), 
-		longi(longi_), 
-		in_reply_to(in_reply_to_),
-		r_tid(r_tid_),
-		hashtags(hashtags_),
-		text(text_) {
-	}
-
-	//std::string const to_str() const;
-
-	bool operator < (const Tweet& t) const {
-		return tid < t.tid;
-	}
-};
-
-
-ostream& operator<< (ostream& os, const Tweet& t) {
-	os << t.tid << " "
-		<< t.sn << " "
-		<< t.created_at << " "
-		<< (t.real_coord ? "T" : "F") << " "
-		<< t.lati << " "
-		<< t.longi << " "
-		<< t.in_reply_to << " "
-		<< t.r_tid << " "
-		<< t.hashtags << "\n"
-		<< t.text << "\n";
-	return os;
-}
-
-
 void _read_parent_tweets(
 		const string& fn,
 		const string& sn,
-		vector<Tweet*>& t_set) {
+		vector<ParentTweet*>& t_set) {
 	ifstream ifs(fn);
 	if (! ifs.good())
 		throw runtime_error(str(boost::format("unable to read file %1%") % fn));
@@ -111,7 +62,7 @@ void _read_parent_tweets(
 			p = p1 + 1; p1 = line.find(" ", p); r_tid = atol(line.substr(p, p1 - p).c_str());
 			p = p1 + 1; hashtags = line.substr(p);
 		} else {
-			t_set.push_back(new Tweet(tid, sn, created_at, real_coord, lati, longi, in_reply_to, r_tid, hashtags, line));
+			t_set.push_back(new ParentTweet(tid, sn, created_at, real_coord, lati, longi, in_reply_to, r_tid, hashtags, line));
 		}
 	}
 }
@@ -119,7 +70,7 @@ void _read_parent_tweets(
 
 void read_parent_tweets(
 		const string& in_dn,
-		map<string, vector<Tweet*> >& parent_tweets) {
+		map<string, vector<ParentTweet*> >& parent_tweets) {
 	boost::timer::cpu_timer tmr;
 	cout << "Reading parent tweets " << flush;
 	namespace fs = boost::filesystem;
@@ -135,7 +86,7 @@ void read_parent_tweets(
 			string fn = di2->path().string();
 			if (boost::ends_with(fn, ".tmp"))
 				continue;
-			vector<Tweet*> t_set;
+			vector<ParentTweet*> t_set;
 			_read_parent_tweets(fn, sn, t_set);
 			if (t_set.size() == 0) {
 				continue;
@@ -153,10 +104,10 @@ void read_parent_tweets(
 
 
 // interpolate missing coords and filter only those with coords
-void interpolate_coords_filter(map<string, vector<Tweet*> >& parent_tweets) {
+void interpolate_coords_filter(map<string, vector<ParentTweet*> >& parent_tweets) {
 	boost::timer::cpu_timer tmr;
 	cout << "intepolating coords " << flush;
-	map<string, vector<Tweet*> > tweets_with_coord;
+	map<string, vector<ParentTweet*> > tweets_with_coord;
 	int num_tweets = 0;
 
 	for (auto sn_tws: parent_tweets) {
@@ -211,8 +162,8 @@ void interpolate_coords_filter(map<string, vector<Tweet*> >& parent_tweets) {
 
 
 void get_parents_by_tid(
-		const map<string, vector<Tweet*> >& parent_tweets_by_sn,
-		map<long, Tweet*>& parent_tweets) {
+		const map<string, vector<ParentTweet*> >& parent_tweets_by_sn,
+		map<long, ParentTweet*>& parent_tweets) {
 	for (auto pt: parent_tweets_by_sn)
 		for (auto t: pt.second)
 			parent_tweets[t->tid] = t;
@@ -223,7 +174,7 @@ void _read_child_tweets_in_file(
 		const string& fn,
 		const string& sn,
 		map<long, ChildTweet*>& child_tweets,
-		map<long, Tweet*>& parent_tweets) {
+		map<long, ParentTweet*>& parent_tweets) {
 	ifstream ifs(fn);
 	if (! ifs.good())
 		throw runtime_error(str(boost::format("unable to read file %1%") % fn));
@@ -271,7 +222,7 @@ void _read_child_tweets_in_file(
 void load_child_tweets(
 		const string& in_dn,
 		map<long, ChildTweet*>& child_tweets,
-		map<long, Tweet*>& parent_tweets) {
+		map<long, ParentTweet*>& parent_tweets) {
 	boost::timer::cpu_timer tmr;
 	cout << "Loading child tweets " << flush;
 	namespace fs = boost::filesystem;
@@ -300,7 +251,7 @@ void load_child_tweets(
 }
 
 
-void _write_output(const string& fn, const map<long, Tweet*>& tweets) {
+void _write_output(const string& fn, const map<long, ParentTweet*>& tweets) {
 	string fn_tmp = fn + ".tmp";
 	ofstream ofs(fn_tmp.c_str());
 	if (! ofs.is_open())
@@ -326,7 +277,7 @@ void _write_output(const string& fn, const map<long, ChildTweet*>& tweets) {
 
 // generate one file each for all parents and all children sorted by datetime
 void write_output(
-		const map<long, Tweet*>& parent_tweets,
+		const map<long, ParentTweet*>& parent_tweets,
 		const map<long, ChildTweet*>& child_tweets,
 		const string& out_dir) {
 	boost::timer::cpu_timer tmr;
@@ -353,10 +304,10 @@ int main(int argc, char* argv[]) {
 		string out_dir = in_dir + "/to-replay";
 		signal(SIGSEGV, on_signal);
 
-		map<string, vector<Tweet*> > parent_tweets_by_sn;
+		map<string, vector<ParentTweet*> > parent_tweets_by_sn;
 		read_parent_tweets(in_p_dir, parent_tweets_by_sn);
 		interpolate_coords_filter(parent_tweets_by_sn);
-		map<long, Tweet*> parent_tweets;
+		map<long, ParentTweet*> parent_tweets;
 		get_parents_by_tid(parent_tweets_by_sn, parent_tweets);
 		map<long, ChildTweet*> child_tweets;
 		load_child_tweets(in_c_dir, child_tweets, parent_tweets);
