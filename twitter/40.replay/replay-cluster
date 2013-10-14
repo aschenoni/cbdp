@@ -19,6 +19,6 @@ BIN_DIR=`cd "$( dirname "$0" )"; pwd`
 OUT_DIR=/mnt/multidc-data/twitter/replay-log/`date +"%y%m%d-%H%M%S"`
 
 mkdir -p $OUT_DIR
-pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -o $OUT_DIR "$BIN_DIR/_replay `date +'%y%m%d-%H%M%S'` $ARGS 2>&1 "
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -t 0 -o $OUT_DIR "$BIN_DIR/_replay `date +'%y%m%d-%H%M%S'` $ARGS 2>&1 "
 
 less_output $OUT_DIR "$ARGS"
