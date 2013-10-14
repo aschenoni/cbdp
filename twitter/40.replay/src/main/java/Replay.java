@@ -56,9 +56,9 @@ public class Replay {
 		accepts("replaytime", "Replay time in sec")
 			.withRequiredArg().ofType(Integer.class).defaultsTo(10);
 		accepts("wc", "Write concurrency: Number of Tweet writer threads")
-			.withRequiredArg().ofType(Integer.class).defaultsTo(10);
+			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
 		accepts("rc", "Read concurrency: Number of Tweet reader threads")
-			.withRequiredArg().ofType(Integer.class).defaultsTo(10);
+			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
 	}};
 
 	void _PrintHelp() throws java.io.IOException {
