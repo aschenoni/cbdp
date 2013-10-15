@@ -61,7 +61,7 @@ public class Replay {
 		accepts("replaytime", "Parent Tweets replay time in sec")
 			.withRequiredArg().ofType(Integer.class).defaultsTo(10);
 		accepts("waittime", "Wait time in sec after finishing replaying parent Tweets. It gives child Tweets some time to read parent Tweets.")
-			.withRequiredArg().ofType(Integer.class).defaultsTo(10);
+			.withRequiredArg().ofType(Integer.class).defaultsTo(30);
 		accepts("wc", "Write concurrency: Number of Tweet writer threads")
 			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
 		accepts("rc", "Read concurrency: Number of Tweet reader threads")
