@@ -3,6 +3,9 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -42,11 +45,14 @@ class TweetReader implements Runnable {
 
 	static class ChildTweet {
 		long tid;
-		String created_at;
+		String st_ca;	// created_at
 		boolean real_coord;
 		float lati;
 		float longi;
 		long r_tid;
+		String r_created_at;
+		long rt_ca;	// created_at in real time in millisecond
+
 		static final ChildTweet END_MARKER = new ChildTweet();
 
 		ChildTweet() {
@@ -63,7 +69,7 @@ class TweetReader implements Runnable {
 			st.nextElement();
 			if (! st.hasMoreElements())
 				throw new RuntimeException("Unexpected format line0: " + line0);
-			created_at = (String) st.nextElement();
+			st_ca = (String) st.nextElement();
 			if (! st.hasMoreElements())
 				throw new RuntimeException("Unexpected format line0: " + line0);
 			real_coord = ((String) st.nextElement()).equals("T");
@@ -80,7 +86,31 @@ class TweetReader implements Runnable {
 			if (! st.hasMoreElements())
 				throw new RuntimeException("Unexpected format line0: " + line0);
 			r_tid = Long.parseLong((String) st.nextElement());
+			if (! st.hasMoreElements())
+				throw new RuntimeException("Unexpected format line0: " + line0);
+			r_created_at = (String) st.nextElement();
 		}
+
+		void CalcRT(Replay _rp) throws java.text.ParseException {
+			// sim time = to_sim_time(r_created_at) + diff(c time - p time)
+			long p_st = _rp._sdf0.parse(r_created_at).getTime();
+			long p_rt = _rp.SimTimeToRealTime(p_st);
+			long c_st = _rp._sdf0.parse(st_ca).getTime();
+			long diff_st = c_st - p_st;
+			rt_ca = p_rt + diff_st;
+			//System.out.printf("p_st=   %s %d\n", _rp._sdf0.format(p_st), p_st);
+			//System.out.printf("p_rt=   %s %d\n", _rp._sdf0.format(p_rt), p_rt);
+			//System.out.printf("c_st=   %s %d\n", _rp._sdf0.format(c_st), c_st);
+			//System.out.printf("diff_st=%d\n", diff_st);
+			//System.out.printf("rt_ca=  %s %d\n", _rp._sdf0.format(rt_ca), rt_ca);
+		}
+
+		public static Comparator<ChildTweet> ByRealTimeCreatedAt = new Comparator<ChildTweet>() {
+			//@Override
+			public int compare(ChildTweet t1, ChildTweet t2) {
+				return (int)(t1.rt_ca - t2.rt_ca);
+			}
+		};
 	}
 
 	static class WhatToRead implements Runnable {
@@ -95,6 +125,8 @@ class TweetReader implements Runnable {
 
 		public void run() {
 			try {
+				// read all and reorder them in the order of replay
+				List<ChildTweet> c_tweets = new ArrayList<ChildTweet>();
 				String fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/children";
 				BufferedReader br = new BufferedReader(new FileReader(fn));
 				while (true) {
@@ -107,6 +139,20 @@ class TweetReader implements Runnable {
 					ChildTweet t = new ChildTweet(line0, line1);
 					if (! _rp._dc.IsLocal(t.lati, t.longi))
 						continue;
+					t.CalcRT(_rp);
+					c_tweets.add(t);
+				}
+				Collections.sort(c_tweets, ChildTweet.ByRealTimeCreatedAt);
+				int replay_cnt = 0;
+				for (ChildTweet t: c_tweets) {
+					if (_rp._rt_end_inc_wait_milli - t.rt_ca >= 0)
+						++ replay_cnt;
+				}
+				System.out.printf("Replaying %d out of %d ...\n", replay_cnt, c_tweets.size());
+
+				for (ChildTweet t: c_tweets) {
+					if (t.rt_ca > _rp._rt_end_inc_wait_milli)
+						break;
 					if (_first_tweet == null)
 						_first_tweet = t;
 					_q.put(t);
@@ -135,7 +181,6 @@ class TweetReader implements Runnable {
 
 		public void run() {
 			try {
-				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
 				int cnt_s = 0;	// successful read cnt
 				int cnt_nt = 0;	// requested tweet not there yet
 
@@ -143,10 +188,8 @@ class TweetReader implements Runnable {
 					ChildTweet t = _q.take();
 					if (t == ChildTweet.END_MARKER)
 						break;
-					long st = sdf0.parse(t.created_at).getTime();
-					long rt = _rp.SimTimeToRealTime(st);
 					long cur_time = System.currentTimeMillis();
-					long sleep_time = rt - cur_time;
+					long sleep_time = t.rt_ca - cur_time;
 					if (t == _first_tweet)
 						System.out.println("TweetReader: waiting " + sleep_time + " ms for sync ...");
 					if (sleep_time > 0)
@@ -167,28 +210,6 @@ class TweetReader implements Runnable {
 						}
 						else {
 							cnt_s ++;
-							// out of curiosity, how much time difference between current time and the read time
-							//long c_rt = System.currentTimeMillis();
-							//long diff = c_rt - rt;
-							//long diff_st = (long)(diff * _rp._replay_time_sf);
-							//float diff_st_s = (diff_st % 60000) / 1000.0f;
-							//long diff_st_m = (diff_st / 60000) % 60;
-							//long diff_st_h = (diff_st / 60000 / 60) % 24;
-							//long diff_st_d = diff_st / 60000 / 60 / 24;
-							//System.out.println("diff: rt: " + (diff / 1000.0) + "s "
-							//		+ " st: " + diff_st_d + "d " + diff_st_h + "h " + diff_st_m + "m " + diff_st_s + "s");
-
-//							if (false) {
-//								long c_rt = System.currentTimeMillis();
-//								long diff = c_rt - created_at_rt;
-//								long diff_st = (long)(diff * _rp._replay_time_sf);
-//								float diff_st_s = (diff_st % 60000) / 1000.0f;
-//								long diff_st_m = (diff_st / 60000) % 60;
-//								long diff_st_h = (diff_st / 60000 / 60) % 24;
-//								long diff_st_d = diff_st / 60000 / 60 / 24;
-//								System.out.println("rt: " + (diff / 1000.0) + "s "
-//										+ " st: " + diff_st_d + "d " + diff_st_h + "h " + diff_st_m + "m " + diff_st_s + "s");
-//							}
 						}
 					} else
 						throw new RuntimeException("Unexpected: rows.size()=" + rows.size());
@@ -200,11 +221,6 @@ class TweetReader implements Runnable {
 						System.out.print("R");
 						System.out.flush();
 					}
-
-					//ParentTweetRead pt;
-					// compare pt.created_at_rt with current time;
-					//
-					// TODO: what if it's not there?
 				}
 				_UpdateCnt(cnt_s, cnt_nt);
 			} catch (Exception e) {
