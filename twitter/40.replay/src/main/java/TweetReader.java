@@ -198,8 +198,8 @@ class TweetReader implements Runnable {
 					if (rows.size() == 0) {
 						// the record is not there yet
 						cnt_nt ++;
+						System.out.printf("no such record yet? %d\n", t.r_tid);
 					} else if (rows.size() == 1) {
-						// TODO: compare the rt and current time.
 						long created_at_rt = rows.get(0).created_at_rt;
 
 						// created_at_rt should be younger than rt_begin_milli. Otherwise,
@@ -207,6 +207,7 @@ class TweetReader implements Runnable {
 						if (created_at_rt < _rp._rt_begin_milli) {
 							// the record is not there yet
 							cnt_nt ++;
+							System.out.printf("record from previous run?: %d\n", created_at_rt - _rp._rt_begin_milli);
 						}
 						else {
 							cnt_s ++;
