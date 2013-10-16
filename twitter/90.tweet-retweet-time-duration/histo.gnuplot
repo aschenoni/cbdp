@@ -10,7 +10,7 @@ BS = system("echo $BUCKET_SIZE")
 set key under nobox
 
 set border back lc rgb "#808080"
-set xlabel "parent/child tweet time durations (in hours)"
+set xlabel "tweet to retweet time interval (in hours)"
 set ylabel "# of tweet pairs"
 
 set grid ytics back lt 0 lc rgb "#E0E0E0"

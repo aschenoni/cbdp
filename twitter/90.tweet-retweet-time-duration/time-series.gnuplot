@@ -1,8 +1,8 @@
 # Tested with gnuplot 4.6 patchlevel 1 on Ubuntu 13.04
 
 set border back lc rgb "#808080"
-set ylabel "parent to child time durations (in sec)"
-set xlabel "date time (patent)"
+set ylabel "tweet to retweet time interval (in sec)"
+set xlabel "date time (original tweets)"
 
 set grid back lt 0 lc rgb "#808080"
 #set grid ytics back lt 0 lc rgb "#E0E0E0"

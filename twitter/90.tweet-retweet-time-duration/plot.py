@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import subprocess
+import multiprocessing
 
 
 def timing(f):
@@ -17,21 +18,39 @@ def timing(f):
 
 
 @timing
+def _run_subprocess(cmd, env):
+	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
+
+
+def run_subprocess(cmd, env):
+	p = multiprocessing.Process(target=_run_subprocess, args=(cmd, env,))
+	p.start()
+	return p
+
+
+@timing
 def Plot():
-	cmd = "gnuplot time-dur.gnuplot"
+	jobs = []
+	cmd = "gnuplot time-series.gnuplot"
 	env = os.environ.copy()
-	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration"
-	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
+	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/time-series"
+	jobs.append(run_subprocess(cmd, env));
 
-	cmd = "gnuplot time-dur-histo.gnuplot"
-	env = os.environ.copy()
-	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo-24"
+	cmd = "gnuplot histo.gnuplot"
+	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo-24"
 	env["BUCKET_SIZE"] = "24"
-	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
+	jobs.append(run_subprocess(cmd, env));
 
-	env["INFILE"] = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo-1"
+	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo-1"
 	env["BUCKET_SIZE"] = "1"
-	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True, env=env)
+	jobs.append(run_subprocess(cmd, env));
+
+	cmd = "gnuplot cdf.gnuplot"
+	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/cdf"
+	jobs.append(run_subprocess(cmd, env));
+
+	for j in jobs:
+		j.join();
 
 
 def main(argv):

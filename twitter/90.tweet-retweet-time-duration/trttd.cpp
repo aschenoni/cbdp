@@ -28,6 +28,28 @@ void on_signal(int sig) {
 }
 
 
+string sec_to_datetime(int s) {
+	stringstream ss;
+	int d = s / (24 * 60 * 60);
+	if (d >= 1) {
+		ss << d << "d ";
+		s = s % (24 * 60 * 60);
+	}
+	int h = s / (60 * 60);
+	if (h >= 1) {
+		ss << h << "h ";
+		s = s % (60 * 60);
+	}
+	int m = s / 60;
+	if (m >= 1) {
+		ss << m << "m ";
+		s = s % 60;
+	}
+	ss << s << "s";
+	return ss.str();
+}
+
+
 class Tweet {
 public:
 	long tid;
@@ -356,10 +378,11 @@ public:
 			<< "# parent_tid p_created_at time_dir_in_sec\n";
 		for (auto e: _entries)
 			ofs << *(e.second);
+		cout << "created " << fn << "\n";
 	}
 
 	void WriteHisto(
-			const string& fn,
+			const string& fn_,
 			const int bucket_size_in_hour,
 			const int max_num_buckets = -1) {
 		int bs = bucket_size_in_hour * 3600;
@@ -381,7 +404,8 @@ public:
 		}
 		for (auto& h: histo)
 			h.second /= total_cnt;
-		ofstream ofs((str(boost::format("%1%-%2%") % fn % bucket_size_in_hour)).c_str());
+		string fn = str(boost::format("%1%-%2%") % fn_ % bucket_size_in_hour);
+		ofstream ofs(fn.c_str());
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
 		ofs << "# bucket size=" << bucket_size_in_hour << "\n";
@@ -389,6 +413,39 @@ public:
 			if (max_num_buckets == -1 || h.first < max_num_buckets)
 				ofs << (h.first * bucket_size_in_hour) << " " << h.second << "\n";
 		}
+		cout << "created " << fn << "\n";
+	}
+
+	void WriteCDF(const string& fn) {
+		ofstream ofs(fn.c_str());
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+		vector<long> durs;
+		for (auto e: _entries)
+			for (long d: e.second->durs)
+				durs.push_back(d);
+		sort(durs.begin(), durs.end());
+		int size = durs.size();
+		// label points
+		float lp[] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0};
+		int lp_size = sizeof(lp) / sizeof(float);
+		int lp_i = 0;
+		bool print_label = false;
+		for (int i = 0 ; i < size; ++ i) {
+			float y = (float) (i+1) / size;
+			if (lp_i < lp_size && y >= lp[lp_i]) {
+				print_label = true;
+				++ lp_i;
+			}
+			ofs << durs[i] << " " << y << " ";
+			if (print_label) {
+				ofs << y << " \"" << sec_to_datetime(durs[i]) << "\"";
+				print_label = false;
+			} else
+				ofs << "- \"\"";
+			ofs << "\n";
+		}
+		cout << "created " << fn << "\n";
 	}
 };
 
@@ -407,8 +464,9 @@ int main(int argc, char* argv[]) {
 
 		string p_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/parents";
 		string c_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/children";
-		string out_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration";
-		string out_hist_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/tweet-retweet-time-duration-histo";
+		string out_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/time-series";
+		string out_hist_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo";
+		string out_cdf_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/cdf";
 
 		map<long, Tweet*> p_tweets = read_parent_tweets(p_fn);
 		vector<Tweet*> c_tweets = read_child_tweets(c_fn);
@@ -416,9 +474,9 @@ int main(int argc, char* argv[]) {
 		td.WriteAll(out_fn);
 		td.WriteHisto(out_hist_fn, 24, 24);
 		td.WriteHisto(out_hist_fn, 1, 24);
+		td.WriteCDF(out_cdf_fn);
 
 		// free p_tweets and c_tweets. okay for a one-time tool.
-
 		return 0;
   } catch (exception const& e) {
     cerr << typeid(e).name() << ": " << e.what() << endl;
