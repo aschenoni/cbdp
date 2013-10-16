@@ -145,13 +145,13 @@ class TweetReader implements Runnable {
 				Collections.sort(c_tweets, ChildTweet.ByRealTimeCreatedAt);
 				int replay_cnt = 0;
 				for (ChildTweet t: c_tweets) {
-					if (_rp._rt_end_inc_wait_milli - t.rt_ca >= 0)
+					if (t.rt_ca < _rp._rt_end_inc_wait_milli)
 						++ replay_cnt;
 				}
 				System.out.printf("Replaying %d out of %d ...\n", replay_cnt, c_tweets.size());
 
 				for (ChildTweet t: c_tweets) {
-					if (t.rt_ca > _rp._rt_end_inc_wait_milli)
+					if (t.rt_ca >= _rp._rt_end_inc_wait_milli)
 						break;
 					if (_first_tweet == null)
 						_first_tweet = t;
