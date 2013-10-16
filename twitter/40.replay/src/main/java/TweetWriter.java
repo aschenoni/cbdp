@@ -86,7 +86,7 @@ class TweetWriter implements Runnable {
 
 		public void run() {
 			try {
-				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
+				SimpleDateFormat sdf0 = new SimpleDateFormat("yyMMdd-HHmmss");
 				int cnt = 0;
 
 				while (true) {

@@ -18,7 +18,6 @@ public class Replay {
 	int _read_conc;
 	DC _dc;
 	CassClient _cc;
-	static SimpleDateFormat _sdf0 = new SimpleDateFormat("yyMMdd-hhmmss");
 
 	Replay(String[] args)
 		throws java.net.UnknownHostException, java.io.FileNotFoundException,
@@ -90,9 +89,10 @@ public class Replay {
 		String ctime = (String) nonop_args.get(0);
 		System.out.println(ctime);
 
-		_rt_begin_milli = _sdf0.parse((String) nonop_args.get(0)).getTime() + 4000L;
-		_st_begin_milli = _sdf0.parse((String) options.valueOf("stbegin")).getTime();
-		_st_end_milli = _sdf0.parse((String) options.valueOf("stend")).getTime();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
+		_rt_begin_milli = sdf.parse((String) nonop_args.get(0)).getTime() + 4000L;
+		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
+		_st_end_milli = sdf.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime");
 		_wait_time = (Integer)options.valueOf("waittime");
 		_write_conc = (Integer)options.valueOf("wc");
@@ -100,11 +100,11 @@ public class Replay {
 		_rt_end_inc_wait_milli = _rt_begin_milli + ((_replay_time + _wait_time) * 1000L);
 		long cur_time = System.currentTimeMillis();
 
-		System.out.printf("_st_begin_milli:        %s %d\n", _sdf0.format(_st_begin_milli), _st_begin_milli);
-		System.out.printf("_st_end_milli:          %s %d\n", _sdf0.format(_st_end_milli), _st_end_milli);
-		System.out.printf("_rt_begin_milli:        %s %d\n", _sdf0.format(_rt_begin_milli), _rt_begin_milli);
-		System.out.printf("_rt_end_inc_wait_milli: %s %d\n", _sdf0.format(_rt_end_inc_wait_milli), _rt_end_inc_wait_milli);
-		System.out.printf("cur time:               %s %d\n", _sdf0.format(cur_time), cur_time);
+		System.out.printf("_st_begin_milli:        %s %d\n", sdf.format(_st_begin_milli), _st_begin_milli);
+		System.out.printf("_st_end_milli:          %s %d\n", sdf.format(_st_end_milli), _st_end_milli);
+		System.out.printf("_rt_begin_milli:        %s %d\n", sdf.format(_rt_begin_milli), _rt_begin_milli);
+		System.out.printf("_rt_end_inc_wait_milli: %s %d\n", sdf.format(_rt_end_inc_wait_milli), _rt_end_inc_wait_milli);
+		System.out.printf("cur time:               %s %d\n", sdf.format(cur_time), cur_time);
 		System.out.printf("_replay_time (sec):     %d\n", _replay_time);
 		System.out.printf("_wait_time (sec):       %d\n", _wait_time);
 	}

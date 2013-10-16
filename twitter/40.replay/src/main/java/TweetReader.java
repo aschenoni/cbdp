@@ -91,18 +91,23 @@ class TweetReader implements Runnable {
 			r_created_at = (String) st.nextElement();
 		}
 
-		void CalcRT(Replay _rp) throws java.text.ParseException {
+		void CalcRT(Replay _rp, SimpleDateFormat sdf) throws java.text.ParseException {
 			// sim time = to_sim_time(r_created_at) + diff(c time - p time)
-			long p_st = _rp._sdf0.parse(r_created_at).getTime();
+			long p_st = sdf.parse(r_created_at).getTime();
 			long p_rt = _rp.SimTimeToRealTime(p_st);
-			long c_st = _rp._sdf0.parse(st_ca).getTime();
+			long c_st = sdf.parse(st_ca).getTime();
 			long diff_st = c_st - p_st;
 			rt_ca = p_rt + diff_st;
-			//System.out.printf("p_st=   %s %d\n", _rp._sdf0.format(p_st), p_st);
-			//System.out.printf("p_rt=   %s %d\n", _rp._sdf0.format(p_rt), p_rt);
-			//System.out.printf("c_st=   %s %d\n", _rp._sdf0.format(c_st), c_st);
-			//System.out.printf("diff_st=%d\n", diff_st);
-			//System.out.printf("rt_ca=  %s %d\n", _rp._sdf0.format(rt_ca), rt_ca);
+			if (diff_st < 0) {
+				System.out.printf("tid=    %d\n", tid);
+				System.out.printf("r_tid=  %d\n", r_tid);
+				System.out.printf("p_st=   %s %d %s\n", sdf.format(p_st), p_st, r_created_at);
+				System.out.printf("p_rt=   %s %d\n", sdf.format(p_rt), p_rt);
+				System.out.printf("c_st=   %s %d %s\n", sdf.format(c_st), c_st, st_ca);
+				System.out.printf("diff_st=%d\n", diff_st);
+				System.out.printf("rt_ca=  %s %d\n", sdf.format(rt_ca), rt_ca);
+				System.out.printf("\n");
+			}
 		}
 
 		public static Comparator<ChildTweet> ByRealTimeCreatedAt = new Comparator<ChildTweet>() {
@@ -127,6 +132,7 @@ class TweetReader implements Runnable {
 			try {
 				// read all and reorder them in the order of replay
 				List<ChildTweet> c_tweets = new ArrayList<ChildTweet>();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 				String fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/children";
 				BufferedReader br = new BufferedReader(new FileReader(fn));
 				while (true) {
@@ -139,7 +145,7 @@ class TweetReader implements Runnable {
 					ChildTweet t = new ChildTweet(line0, line1);
 					if (! _rp._dc.IsLocal(t.lati, t.longi))
 						continue;
-					t.CalcRT(_rp);
+					t.CalcRT(_rp, sdf);
 					c_tweets.add(t);
 				}
 				Collections.sort(c_tweets, ChildTweet.ByRealTimeCreatedAt);
@@ -170,6 +176,7 @@ class TweetReader implements Runnable {
 	static class ReadFromCass implements Runnable {
 		private Replay _rp;
 		private BlockingQueue<ChildTweet> _q;
+		private SimpleDateFormat _sdf;
 		static private Integer _cnt_s = 0;	// successful read cnt
 		static private Integer _cnt_nt = 0;	// requested tweet not there yet
 
@@ -177,6 +184,7 @@ class TweetReader implements Runnable {
 				BlockingQueue<ChildTweet> q) {
 			_rp = rp;
 			_q = q;
+			_sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 		}
 
 		public void run() {
@@ -190,8 +198,11 @@ class TweetReader implements Runnable {
 						break;
 					long cur_time = System.currentTimeMillis();
 					long sleep_time = t.rt_ca - cur_time;
-					if (t == _first_tweet)
+					if (t == _first_tweet) {
+						System.out.printf("cur_time: %s %d\n", _sdf.format(cur_time), cur_time);
+						System.out.printf("rt_ca:    %s %d\n", _sdf.format(t.rt_ca), t.rt_ca);
 						System.out.println("TweetReader: waiting " + sleep_time + " ms for sync ...");
+					}
 					if (sleep_time > 0)
 						Thread.sleep(sleep_time);
 					List<ParentTweetFromCass> rows = _rp._cc.ReadParentTweet(t.r_tid);
@@ -207,7 +218,10 @@ class TweetReader implements Runnable {
 						if (created_at_rt < _rp._rt_begin_milli) {
 							// the record is not there yet
 							cnt_nt ++;
-							System.out.printf("record from previous run?: %d\n", created_at_rt - _rp._rt_begin_milli);
+							System.out.printf(" tid=%d r_tid=%d created_at_rt(%d) -  _rp._rt_begin_milli(%d) = %d\n",
+									t.tid, t.r_tid,
+									created_at_rt, _rp._rt_begin_milli,
+									created_at_rt - _rp._rt_begin_milli);
 						}
 						else {
 							cnt_s ++;
