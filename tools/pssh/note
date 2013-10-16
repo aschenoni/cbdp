@@ -9,4 +9,4 @@ time ./pssh "time (apt-get install -y htop git vim ctags)"
 # git repository update
 time ./pssh "(cd ~/work/cbdp && git pull)"
 
-./pssh "cd work/cbdp/twitter/40.replay && mvn package -DskipTests"
+./pssh "cd work/cbdp/twitter/40.replay && rm -rf target .dep-class-path && mvn package -DskipTests"
