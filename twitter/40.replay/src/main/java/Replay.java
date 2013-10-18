@@ -84,6 +84,7 @@ public class Replay {
 
 	private void _ParseOptions(String[] args)
 		throws java.io.IOException, java.text.ParseException {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 		OptionSet options = _opt_parser.parse(args);
 		if (options.has("h")) {
 			_PrintHelp();
@@ -95,9 +96,11 @@ public class Replay {
 			System.exit(1);
 		}
 		String ctime = (String) nonop_args.get(0);
-		System.out.println(ctime);
+		long ctime_ = System.currentTimeMillis();
+		System.out.printf("arg cur time: %d %s\n", sdf.parse(ctime).getTime(), ctime);
+		System.out.printf("cur time:     %d %s\n", ctime_, sdf.format(ctime_));
+		System.out.printf("diff:         %d\n", ctime_ - sdf.parse(ctime).getTime());
 
-		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 		_rt_begin = (String) nonop_args.get(0);
 		_rt_begin_milli = sdf.parse(_rt_begin).getTime() + RT_BEGIN_OFFSET;
 		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
