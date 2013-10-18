@@ -63,7 +63,10 @@ class CassClient {
 		throws java.lang.InterruptedException {
 		BoundStatement bs = _stmt_read.bind();
 		bs.bind(tid);
-		ResultSet rs = _RunQuery(bs);
+		ResultSet rs;
+		try (MonUserLatR _ = new MonUserLatR()) {
+			rs = _RunQuery(bs);
+		}
 		List<TweetReader.ParentTweetFromCass> rows
 			= new ArrayList<TweetReader.ParentTweetFromCass>();
 		for (Row r: rs.all())

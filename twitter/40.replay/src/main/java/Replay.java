@@ -5,6 +5,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 public class Replay {
+	String _rt_begin;
 	long _rt_begin_milli;
 	long _st_begin_milli;
 	long _st_end_milli;
@@ -13,9 +14,10 @@ public class Replay {
 	// for how long to wait after finishing replaying parent tweets.
 	// this gives time for child tweets to read parent tweets.
 	long _wait_time;
-	long _rt_end_inc_wait_milli;
 	int _write_conc;
 	int _read_conc;
+	long _rt_end_inc_wait_milli;
+	String _logdir;
 	DC _dc;
 	CassClient _cc;
 
@@ -65,6 +67,8 @@ public class Replay {
 			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
 		accepts("rc", "Read concurrency: Number of Tweet reader threads")
 			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
+		accepts("logdir", "Log directory")
+			.withRequiredArg().defaultsTo("/mnt/multidc-data/twitter/replay-log");
 	}};
 
 	void _PrintHelp() throws java.io.IOException {
@@ -90,7 +94,8 @@ public class Replay {
 		System.out.println(ctime);
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
-		_rt_begin_milli = sdf.parse((String) nonop_args.get(0)).getTime() + 4000L;
+		_rt_begin = (String) nonop_args.get(0);
+		_rt_begin_milli = sdf.parse(_rt_begin).getTime() + 4000L;
 		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime");
@@ -98,6 +103,7 @@ public class Replay {
 		_write_conc = (Integer)options.valueOf("wc");
 		_read_conc = (Integer)options.valueOf("rc");
 		_rt_end_inc_wait_milli = _rt_begin_milli + ((_replay_time + _wait_time) * 1000L);
+		_logdir = (String) options.valueOf("logdir");
 		long cur_time = System.currentTimeMillis();
 
 		System.out.printf("_st_begin_milli:        %s %d\n", sdf.format(_st_begin_milli), _st_begin_milli);
@@ -107,6 +113,7 @@ public class Replay {
 		System.out.printf("cur time:               %s %d\n", sdf.format(cur_time), cur_time);
 		System.out.printf("_replay_time (sec):     %d\n", _replay_time);
 		System.out.printf("_wait_time (sec):       %d\n", _wait_time);
+		System.out.printf("_logdir: %s\n", _logdir);
 	}
 
 	public static void main(String[] args) throws Exception {
