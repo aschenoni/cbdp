@@ -97,8 +97,13 @@ class TweetWriter implements Runnable {
 					long rt = _rp.SimTimeToRealTime(st);
 					long cur_time = System.currentTimeMillis();
 					long sleep_time = rt - cur_time;
-					if (t == _first_tweet)
+					if (t == _first_tweet) {
+						if (sleep_time <= 0) {
+							System.out.printf("Synchronization failure. Initialization took more than %d ms.\n", _rp.RT_BEGIN_OFFSET);
+							System.exit(0);
+						}
 						System.out.println("TweetWriter: waiting " + sleep_time + " ms for sync ...");
+					}
 					if (sleep_time > 0)
 						Thread.sleep(sleep_time);
 					_rp._cc.WriteParentTweet(t);

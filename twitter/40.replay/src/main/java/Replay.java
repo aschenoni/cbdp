@@ -5,6 +5,10 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 public class Replay {
+	// Wait time from the beginning of this process to the beginning fo the
+	// simulation to synchronize all clients.
+	final long RT_BEGIN_OFFSET = 4000L;
+
 	String _rt_begin;
 	long _rt_begin_milli;
 	long _st_begin_milli;
@@ -95,7 +99,7 @@ public class Replay {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 		_rt_begin = (String) nonop_args.get(0);
-		_rt_begin_milli = sdf.parse(_rt_begin).getTime() + 4000L;
+		_rt_begin_milli = sdf.parse(_rt_begin).getTime() + RT_BEGIN_OFFSET;
 		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime");

@@ -159,7 +159,7 @@ class TweetReader implements Runnable {
 					if (t.rt_ca < _rp._rt_end_inc_wait_milli)
 						++ replay_cnt;
 				}
-				System.out.printf("Replaying %d out of %d ...\n", replay_cnt, c_tweets.size());
+				System.out.printf("Replaying %d retweets out of %d ...\n", replay_cnt, c_tweets.size());
 
 				for (ChildTweet t: c_tweets) {
 					if (t.rt_ca >= _rp._rt_end_inc_wait_milli)
@@ -204,8 +204,12 @@ class TweetReader implements Runnable {
 					long cur_time = System.currentTimeMillis();
 					long sleep_time = t.rt_ca - cur_time;
 					if (t == _first_tweet) {
-						System.out.printf("cur_time: %s %d\n", _sdf.format(cur_time), cur_time);
-						System.out.printf("rt_ca:    %s %d\n", _sdf.format(t.rt_ca), t.rt_ca);
+						if (sleep_time <= 0) {
+							System.out.printf("Synchronization failure. Initialization took more than %d ms.\n", _rp.RT_BEGIN_OFFSET);
+							System.exit(0);
+						}
+						//System.out.printf("cur_time: %s %d\n", _sdf.format(cur_time), cur_time);
+						//System.out.printf("rt_ca:    %s %d\n", _sdf.format(t.rt_ca), t.rt_ca);
 						System.out.println("TweetReader: waiting " + sleep_time + " ms for sync ...");
 					}
 					if (sleep_time > 0)
