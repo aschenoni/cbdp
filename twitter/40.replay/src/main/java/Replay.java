@@ -7,7 +7,7 @@ import joptsimple.OptionSet;
 public class Replay {
 	// Wait time from the beginning of this process to the beginning fo the
 	// simulation to synchronize all clients.
-	final long RT_BEGIN_OFFSET = 4000L;
+	final long RT_BEGIN_OFFSET = 6000L;
 
 	String _rt_begin;
 	long _rt_begin_milli;
