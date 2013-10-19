@@ -1,6 +1,9 @@
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -10,17 +13,18 @@ class MonUserLatR implements AutoCloseable {
 
 	MonUserLatR() {
 		l = new Lat();
-		lats.add(l);
 	}
 
 	@Override
 	public void close() {
 		l.End();
+		lats.add(l);
 	}
 
 	static void WriteResult(String fn) throws java.io.IOException {
 		int size = lats.size();
 		if (size == 0) return;
+		Collections.sort(lats, Lat.ByTS);
 
 		long min = 0;
 		long max = 0;
@@ -33,25 +37,27 @@ class MonUserLatR implements AutoCloseable {
 				first = false;
 				min = max = sum = l.dur;
 				sum_sq = ((double)l.dur) * l.dur;
+			} else {
+				if (min > l.dur) min = l.dur;
+				else if (max < l.dur) max = l.dur;
+				sum += l.dur;
+				sum_sq += (((double)l.dur) * l.dur);
 			}
-			if (min > l.dur) min = l.dur;
-			else if (max < l.dur) max = l.dur;
-			sum += l.dur;
-			sum_sq += (((double)l.dur) * l.dur);
 		}
 		double avg = ((double) sum) / size;
-		double sd = Math.sqrt(avg * avg - sum_sq / size);
+		double sd = Math.sqrt(sum_sq / size - avg * avg);
 
 		PrintWriter out = new PrintWriter(new FileWriter(fn));
 		out.printf("# min max avg sd\n");
 		out.printf("# %d %d %f %f\n", min, max, avg, sd);
-		for (Lat l: lats) {
-			out.printf("%d %d\n", l.timestamp, l.dur);
-		}
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss.SSS");
+		for (Lat l: lats)
+			out.printf("%s %d %d\n", sdf.format(l.timestamp), l.timestamp, l.dur);
 		out.close();
 	}
 
-	class Lat {
+	static class Lat {
 		long timestamp;
 		long dur;
 
@@ -62,5 +68,12 @@ class MonUserLatR implements AutoCloseable {
 		void End() {
 			dur = System.currentTimeMillis() - timestamp;
 		}
+
+		public static Comparator<Lat> ByTS = new Comparator<Lat>() {
+			//@Override
+			public int compare(Lat t1, Lat t2) {
+				return (int)(t1.timestamp - t2.timestamp);
+			}
+		};
 	}
 }
