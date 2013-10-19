@@ -1,0 +1,1 @@
+./plot.py && rsync -av --delete -e 'ssh -p 20022' /mnt/multidc-data/twitter/replay-log localhost:
