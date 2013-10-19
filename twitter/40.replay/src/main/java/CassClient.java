@@ -55,7 +55,8 @@ class CassClient {
 
 	void WriteParentTweet(TweetWriter.ParentTweet t) throws java.lang.InterruptedException {
 		BoundStatement bs = _stmt_write.bind();
-		bs.bind(t.tid, t.sn, t.created_at, System.currentTimeMillis(), t.real_coord, t.longi, t.lati, t.text);
+		bs.bind(t.tid, t.sn, t.created_at, System.currentTimeMillis(), t.real_coord, t.longi, t.lati, t.text)
+			.setConsistencyLevel(ConsistencyLevel.ONE);
 		try (MonUserLat _ = new MonUserLat('W')) {
 			_RunQuery(bs);
 		}
@@ -64,7 +65,8 @@ class CassClient {
 	List<TweetReader.ParentTweetFromCass> ReadParentTweet(long tid)
 		throws java.lang.InterruptedException {
 		BoundStatement bs = _stmt_read.bind();
-		bs.bind(tid);
+		bs.bind(tid)
+			.setConsistencyLevel(ConsistencyLevel.ONE);
 		ResultSet rs;
 		try (MonUserLat _ = new MonUserLat('R')) {
 			rs = _RunQuery(bs);
