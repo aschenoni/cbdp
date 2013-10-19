@@ -10,13 +10,13 @@ then
 	mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
 fi
 
-java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay $@
+java -cp target/Replay-0.1-SNAPSHOT.jar:`cat $DEF_CLASS_PATH_FILE` Replay "${@:2}"
 
 popd > /dev/null
 
-CUR_DATETIME=$1
+CUR_DATETIME=$2
 HOSTNAME=`hostname`
 
-if [ "$HOSTNAME" != "mdc-s70" ]; then
+if [ "$HOSTNAME" != "$1" ]; then
 	scp -rp /mnt/multidc-data/twitter/replay-log/$CUR_DATETIME/$HOSTNAME mdc-s70:/mnt/multidc-data/twitter/replay-log/$CUR_DATETIME
 fi
