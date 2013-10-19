@@ -268,8 +268,8 @@ reduce_cache_capacity_to: 0.6
 # On the other hand, since writes are almost never IO bound, the ideal
 # number of "concurrent_writes" is dependent on the number of cores in
 # your system; (8 * number_of_cores) is a good rule of thumb.
-concurrent_reads: 32
-concurrent_writes: 32
+concurrent_reads: 64
+concurrent_writes: 64
 
 # Total memory to use for memtables.  Cassandra will flush the largest
 # memtable when this much memory is used.
@@ -571,7 +571,7 @@ cross_node_timeout: false
 #
 # You can use a custom Snitch by setting this to the full class name
 # of the snitch, which will be assumed to be on your classpath.
-endpoint_snitch: PropertyFileSnitch 
+endpoint_snitch: PropertyFileSnitch
 
 # controls how often to perform the more expensive part of host score
 # calculation
