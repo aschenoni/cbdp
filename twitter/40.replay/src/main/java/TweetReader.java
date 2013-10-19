@@ -1,5 +1,4 @@
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.BlockingQueue;
@@ -37,10 +36,6 @@ class TweetReader implements Runnable {
 			System.out.println("\nRead: total: " + (ReadFromCass._cnt_s + ReadFromCass._cnt_nt)
 					+ " successful: " + ReadFromCass._cnt_s
 					+ " not there yet: " + ReadFromCass._cnt_nt);
-			String dn = _rp._logdir + "/" + _rp._rt_begin + "/" + Util.GetHostname();
-			new File(dn).mkdirs();
-			String fn = dn + "/user-lat-r";
-			MonUserLatR.WriteResult(fn);
 		} catch (Exception e) {
 			System.err.println("Unexpected error: " + e.getMessage());
 			e.printStackTrace();

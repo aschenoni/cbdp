@@ -33,15 +33,17 @@ public class Replay {
 		_cc = new CassClient();
 	}
 
-	void Start() throws java.lang.InterruptedException {
+	void Start() throws java.lang.InterruptedException, java.net.UnknownHostException, java.io.IOException {
 		Thread w = new Thread(new TweetWriter(this));
 		Thread r = new Thread(new TweetReader(this));
 		w.start();
 		r.start();
 		w.join();
 		r.join();
+
+		_LogStat();
 	}
-	
+
 	long SimTimeToRealTime(long sim_time_milli) {
 		// st_dur = st_end - st_begin = "130428-000000" - "130407-000000"
 		// rt_dur = rt_end - rt_begin = replay_time
@@ -56,7 +58,12 @@ public class Replay {
 				/ (_st_end_milli - _st_begin_milli) * (_replay_time * 1000.0) + _rt_begin_milli );
 		return rt;
 	}
-	
+
+	private void _LogStat() throws java.net.UnknownHostException, java.io.IOException {
+		String dn = _logdir + "/" + _rt_begin + "/" + Util.GetHostname();
+		MonUserLat.WriteResult(dn);
+	}
+
 	private static final OptionParser _opt_parser = new OptionParser() {{
 		accepts("h", "Show this help message");
 		accepts("stbegin", "Simulation begin datetime")

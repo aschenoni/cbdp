@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -7,21 +8,30 @@ import java.util.Comparator;
 import java.util.List;
 
 
-class MonUserLatR implements AutoCloseable {
-	static List<Lat> lats = new ArrayList<Lat>();
+class MonUserLat implements AutoCloseable {
+	static List<Lat> r_lats = new ArrayList<Lat>();
+	static List<Lat> w_lats = new ArrayList<Lat>();
 	Lat l;
 
-	MonUserLatR() {
+	MonUserLat(char op) {
 		l = new Lat();
+		if (op == 'R') r_lats.add(l);
+		else if (op == 'W') w_lats.add(l);
+		else throw new RuntimeException("Unknown op " + op);
 	}
 
 	@Override
 	public void close() {
 		l.End();
-		lats.add(l);
 	}
 
-	static void WriteResult(String fn) throws java.io.IOException {
+	static void WriteResult(String dn) throws java.io.IOException {
+		new File(dn).mkdirs();
+		_WriteResult(dn + "/userlat-r", r_lats);
+		_WriteResult(dn + "/userlat-w", w_lats);
+	}
+
+	static private void _WriteResult(String fn, List<Lat> lats) throws java.io.IOException {
 		int size = lats.size();
 		if (size == 0) return;
 		Collections.sort(lats, Lat.ByTS);
