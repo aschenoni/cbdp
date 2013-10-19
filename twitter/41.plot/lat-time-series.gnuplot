@@ -15,27 +15,18 @@ set xtics font ",10"
 set terminal pdf enhanced size 5.50in, 4.125in
 OUTFILE = INDIR . "/plot/userlat-timeseries.pdf"
 set output OUTFILE
-set pointsize 0.5
+set pointsize 0.4
 
-set key under nobox maxrows 1
+set key under nobox maxrows 2
 
 # Too many items. Hard to get.
 
 plot \
-INDIR . "/mdc-s60/userlat-r" u 1:3 w points t "mdc-s60", \
-INDIR . "/mdc-s60/userlat-w" u 1:3 w points t "mdc-s60", \
-INDIR . "/mdc-s70/userlat-r" u 1:3 w points t "mdc-s70", \
-INDIR . "/mdc-s70/userlat-w" u 1:3 w points t "mdc-s70", \
-INDIR . "/mdc-s80/userlat-r" u 1:3 w points t "mdc-s80", \
-INDIR . "/mdc-s80/userlat-w" u 1:3 w points t "mdc-s80", \
-INDIR . "/mdc-p40/userlat-r" u 1:3 w points t "mdc-p40", \
-INDIR . "/mdc-p40/userlat-w" u 1:3 w points t "mdc-p40"
-
-#INDIR . "/mdc-s60/userlat-r" u 1:3 w points lt 1 lc rgb "#FF0000" t "mdc-s60", \
-#INDIR . "/mdc-s60/userlat-w" u 1:3 w points lt 0 lc rgb "#FF0000" t "mdc-s60", \
-#INDIR . "/mdc-s70/userlat-r" u 1:3 w points lt 1 lc rgb "#0000FF" t "mdc-s70", \
-#INDIR . "/mdc-s70/userlat-w" u 1:3 w points lt 0 lc rgb "#0000FF" t "mdc-s70", \
-#INDIR . "/mdc-s80/userlat-r" u 1:3 w points lt 1 lc rgb "#A52A2A" t "mdc-s80", \
-#INDIR . "/mdc-s80/userlat-w" u 1:3 w points lt 0 lc rgb "#A52A2A" t "mdc-s80", \
-#INDIR . "/mdc-p40/userlat-r" u 1:3 w points lt 1 lc rgb "#006400" t "mdc-p40", \
-#INDIR . "/mdc-p40/userlat-w" u 1:3 w points lt 0 lc rgb "#006400" t "mdc-p40"
+INDIR . "/mdc-s60/userlat-w" u 1:3 w points lt 1 lc rgb "#FF0000" t "W s60", \
+INDIR . "/mdc-s70/userlat-w" u 1:3 w points lt 2 lc rgb "#FF0000" t "W s70", \
+INDIR . "/mdc-s80/userlat-w" u 1:3 w points lt 6 lc rgb "#FF0000" t "W s80", \
+INDIR . "/mdc-p40/userlat-w" u 1:3 w points lt 4 lc rgb "#FF0000" t "W p40", \
+INDIR . "/mdc-s60/userlat-r" u 1:3 w points lt 1 lc rgb "#0000FF" t "R s60", \
+INDIR . "/mdc-s70/userlat-r" u 1:3 w points lt 2 lc rgb "#0000FF" t "R s70", \
+INDIR . "/mdc-s80/userlat-r" u 1:3 w points lt 6 lc rgb "#0000FF" t "R s80", \
+INDIR . "/mdc-p40/userlat-r" u 1:3 w points lt 4 lc rgb "#0000FF" t "R p40"
