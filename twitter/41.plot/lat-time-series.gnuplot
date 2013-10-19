@@ -30,3 +30,19 @@ INDIR . "/mdc-s60/userlat-r" u 1:3 w points lt 1 lc rgb "#0000FF" t "R s60", \
 INDIR . "/mdc-s70/userlat-r" u 1:3 w points lt 2 lc rgb "#0000FF" t "R s70", \
 INDIR . "/mdc-s80/userlat-r" u 1:3 w points lt 6 lc rgb "#0000FF" t "R s80", \
 INDIR . "/mdc-p40/userlat-r" u 1:3 w points lt 4 lc rgb "#0000FF" t "R p40"
+
+OUTFILE = INDIR . "/plot/userlat-timeseries-w.pdf"
+set output OUTFILE
+plot \
+INDIR . "/mdc-s60/userlat-w" u 1:3 w points lt 1 lc rgb "#FF0000" t "s60", \
+INDIR . "/mdc-s70/userlat-w" u 1:3 w points lt 2 lc rgb "#FF0000" t "s70", \
+INDIR . "/mdc-s80/userlat-w" u 1:3 w points lt 6 lc rgb "#FF0000" t "s80", \
+INDIR . "/mdc-p40/userlat-w" u 1:3 w points lt 4 lc rgb "#FF0000" t "p40"
+
+OUTFILE = INDIR . "/plot/userlat-timeseries-r.pdf"
+set output OUTFILE
+plot \
+INDIR . "/mdc-s60/userlat-r" u 1:3 w points lt 1 lc rgb "#0000FF" t "s60", \
+INDIR . "/mdc-s70/userlat-r" u 1:3 w points lt 2 lc rgb "#0000FF" t "s70", \
+INDIR . "/mdc-s80/userlat-r" u 1:3 w points lt 6 lc rgb "#0000FF" t "s80", \
+INDIR . "/mdc-p40/userlat-r" u 1:3 w points lt 4 lc rgb "#0000FF" t "p40"
