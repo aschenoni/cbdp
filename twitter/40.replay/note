@@ -1,1 +1,4 @@
+time mvn package -DskipTests
+time mvn compile exec:java
+
 ./replay-cluster --replaytime=10 --rc=50 --wc=50
