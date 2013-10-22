@@ -156,7 +156,33 @@ def Plot(dn):
 	jobs.append(run_subprocess_fn(_PlotTimeSeries, (dn,)));
 	jobs.append(run_subprocess_fn(_PlotErrorbar, (dn,)));
 	jobs.append(run_subprocess_fn(_PlotCDF, (dn,)));
+	for j in jobs:
+		j.join();
 
+
+def _ConvPNG(fn):
+	cmd = "convert -density 400 -alpha off -resize 37.5%% %s.pdf %s.png" % (fn, fn)
+	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True)
+	print "  %s" % fn.split("/")[-1]
+
+
+@timing
+def ConvPNG(dn):
+	print "Converting to PNG ..."
+
+	dn0 = os.path.join(dn, "plot")
+	fns = []
+	for fn in os.listdir(dn0):
+		t = os.path.splitext(fn)
+		if len(t) != 2:
+			continue
+		if t[1] == ".pdf":
+			fns.append(os.path.join(dn0, t[0]))
+	#print "\n".join(fns)
+
+	jobs = []
+	for fn in fns:
+		jobs.append(run_subprocess_fn(_ConvPNG, (fn,)));
 	for j in jobs:
 		j.join();
 
@@ -182,6 +208,7 @@ def main(argv):
 				% (argv[0], argv[0]))
 
 	Plot(log_dn)
+	ConvPNG(log_dn)
 
 
 if __name__ == "__main__":
