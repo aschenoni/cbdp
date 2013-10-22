@@ -1,3 +1,5 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.InterruptedException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +8,7 @@ import java.util.Map;
 
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.exceptions.*;
+import com.datastax.driver.core.policies.*;
 
 class CassClient {
 	private Session _sess;
@@ -13,10 +16,15 @@ class CassClient {
 	private PreparedStatement _stmt_write;
 	private PreparedStatement _stmt_read;
 
-	CassClient() throws java.net.SocketException {
+	CassClient() throws
+		java.net.SocketException,
+		java.io.FileNotFoundException,
+		java.io.IOException {
 		String ip = Util.GetEth0IP();
 		//System.out.println(ip);
-		Cluster cluster = new Cluster.Builder().addContactPoints(ip).build();
+		Cluster cluster = new Cluster.Builder()
+			.addContactPoints(ip)
+			.withLoadBalancingPolicy(new DCAwareRoundRobinPolicy(_IPtoDC(ip))).build();
 		_sess= cluster.connect();
 		Metadata metadata = cluster.getMetadata();
 		System.out.println(String.format("Connected to cluster '%s' on %s.", metadata.getClusterName(), metadata.getAllHosts()));
@@ -25,6 +33,29 @@ class CassClient {
 				+ "(tid, sn, created_at_st, created_at_rt, real_coord, longi, lati, text_) "
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?); ");
 		_stmt_read = _sess.prepare("SELECT * from tweet where tid=?");
+	}
+
+	private String _IPtoDC(String ip)
+		throws java.io.FileNotFoundException, java.io.IOException {
+		String fn = System.getProperty("user.home") + "/work/cassandra/conf/cassandra-topology.properties";
+		BufferedReader br = new BufferedReader(new FileReader(fn));
+		while (true) {
+			String line = br.readLine();
+			if (line == null)
+				break;
+			if (line.length() == 0)
+				continue;
+			if (line.charAt(0) == '#')
+				continue;
+			String[] t = line.split("=|:");
+			if (t.length == 3) {
+				//System.out.printf("%s %s %s\n", t[0], t[1], t[2]);
+				if (ip.equals(t[0]))
+					return t[1];
+			}
+		}
+		if (true) throw new RuntimeException("Unknown ip " + ip);
+		return "";
 	}
 
 	private void _CreateSchema() {
