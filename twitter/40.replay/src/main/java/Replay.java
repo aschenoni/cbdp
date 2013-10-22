@@ -105,10 +105,10 @@ public class Replay {
 		_rt_begin_req_milli = sdf.parse(_rt_begin_req).getTime();
 
 		System.out.printf("begin time req:    %d %s\n", _rt_begin_req_milli, _rt_begin_req);
-		_rt_begin_milli = _cc.AgreeOnBeginTime(_rt_begin_req_milli);
-		System.out.printf("begin time agreed: %d %s\n", _rt_begin_milli, sdf.format(_rt_begin_milli));
 		long ctime = System.currentTimeMillis();
 		System.out.printf("cur time:          %d %s\n", ctime, sdf.format(ctime));
+		_rt_begin_milli = _cc.AgreeOnBeginTime(_rt_begin_req_milli);
+		System.out.printf("begin time agreed: %d %s\n", _rt_begin_milli, sdf.format(_rt_begin_milli));
 
 		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf.parse((String) options.valueOf("stend")).getTime();
