@@ -73,7 +73,7 @@ def thread_measure_rtt(rtt, rtt_lock, vm_from, vm_to):
 
 def print_rtt_matrix(rtt):
 	#print rtt
-	sys.stdout.write("          ")
+	sys.stdout.write("        ")
 	for j in range(0, len(CassNodes)): 
 		sys.stdout.write("%7s " % CassNodes[j])
 	sys.stdout.write("\n")
