@@ -99,9 +99,7 @@ class TweetWriter implements Runnable {
 					long sleep_time = rt - cur_time;
 					if (t == _first_tweet) {
 						if (sleep_time <= 0)
-							throw new RuntimeException("Synchronization failure. "
-									+ "Initialization took more than " + _rp.RT_BEGIN_OFFSET + " ms. "
-									+ "sleep_time=" + sleep_time);
+							throw new RuntimeException("Synchronization failure. sleep_time=" + sleep_time);
 						System.out.println("TweetWriter: waiting " + sleep_time + " ms for sync ...");
 					}
 					if (sleep_time > 0)

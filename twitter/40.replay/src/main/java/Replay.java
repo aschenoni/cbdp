@@ -5,11 +5,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 public class Replay {
-	// Wait time from the beginning of this process to the beginning fo the
-	// simulation to synchronize all clients.
-	final long RT_BEGIN_OFFSET = 20000L;
-
-	String _rt_begin;
+	private String _rt_begin_req;
+	private long _rt_begin_req_milli;
 	long _rt_begin_milli;
 	long _st_begin_milli;
 	long _st_end_milli;
@@ -27,10 +24,11 @@ public class Replay {
 
 	Replay(String[] args)
 		throws java.net.UnknownHostException, java.io.FileNotFoundException,
-										java.io.IOException, java.text.ParseException {
+			java.io.IOException, java.text.ParseException,
+			java.lang.InterruptedException {
+		_cc = new CassClient();
 		_ParseOptions(args);
 		_dc = new DC();
-		_cc = new CassClient();
 	}
 
 	void Start() throws java.lang.InterruptedException, java.net.UnknownHostException, java.io.IOException {
@@ -60,7 +58,7 @@ public class Replay {
 	}
 
 	private void _LogStat() throws java.net.UnknownHostException, java.io.IOException {
-		String dn = _logdir + "/" + _rt_begin + "/" + Util.GetHostname();
+		String dn = _logdir + "/" + _rt_begin_req + "/" + Util.GetHostname();
 		MonUserLat.WriteResult(dn);
 	}
 
@@ -85,12 +83,12 @@ public class Replay {
 	void _PrintHelp() throws java.io.IOException {
 		String class_name = this.getClass().getSimpleName();
 		System.out.println("Usage: " + class_name + " [<option>]* ctime");
-		System.out.println("  ctime: Current datetime for synchronizing multiple nodes. Try `date +\"%y%m%d-%H%M%S\"`.\n");
+		System.out.println("  ctime: Current datetime to identify each run. Try `date +\"%y%m%d-%H%M%S\"`.\n");
 		_opt_parser.printHelpOn(System.out);
 	}
 
 	private void _ParseOptions(String[] args)
-		throws java.io.IOException, java.text.ParseException {
+		throws java.io.IOException, java.text.ParseException, java.lang.InterruptedException {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
 		OptionSet options = _opt_parser.parse(args);
 		if (options.has("h")) {
@@ -102,14 +100,16 @@ public class Replay {
 			_PrintHelp();
 			System.exit(1);
 		}
-		String ctime = (String) nonop_args.get(0);
-		long ctime_ = System.currentTimeMillis();
-		System.out.printf("arg cur time: %d %s\n", sdf.parse(ctime).getTime(), ctime);
-		System.out.printf("cur time:     %d %s\n", ctime_, sdf.format(ctime_));
-		System.out.printf("diff:         %d\n", ctime_ - sdf.parse(ctime).getTime());
 
-		_rt_begin = (String) nonop_args.get(0);
-		_rt_begin_milli = sdf.parse(_rt_begin).getTime() + RT_BEGIN_OFFSET;
+		_rt_begin_req = (String) nonop_args.get(0);
+		_rt_begin_req_milli = sdf.parse(_rt_begin_req).getTime();
+
+		System.out.printf("begin time req:    %d %s\n", _rt_begin_req_milli, _rt_begin_req);
+		_rt_begin_milli = _cc.AgreeOnBeginTime(_rt_begin_req_milli);
+		System.out.printf("begin time agreed: %d %s\n", _rt_begin_milli, sdf.format(_rt_begin_milli));
+		long ctime = System.currentTimeMillis();
+		System.out.printf("cur time:          %d %s\n", ctime, sdf.format(ctime));
+
 		_st_begin_milli = sdf.parse((String) options.valueOf("stbegin")).getTime();
 		_st_end_milli = sdf.parse((String) options.valueOf("stend")).getTime();
 		_replay_time = (Integer)options.valueOf("replaytime");
