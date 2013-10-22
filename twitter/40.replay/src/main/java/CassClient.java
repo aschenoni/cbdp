@@ -59,7 +59,7 @@ class CassClient {
 					vts.add(vt);
 			}
 			if (vts.size() == NUM_CLIENTS) {
-				begin_time = Collections.max(vts) + 2000;
+				begin_time = Collections.max(vts) + 1000;
 				break;
 			}
 			System.out.print(".");
