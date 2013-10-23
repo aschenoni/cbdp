@@ -160,6 +160,7 @@ def Plot(dn):
 		j.join();
 
 
+# http://www.pierre-koerber.ch/wordpress/transform-pdf-to-jpg
 def _ConvPNG(fn):
 	cmd = "convert -density 400 -alpha off -resize 37.5%% %s.pdf %s.png" % (fn, fn)
 	subprocess.check_call(cmd, stderr=subprocess.STDOUT, shell=True)
