@@ -1,3 +1,0 @@
-# https://dev.twitter.com/docs/api/1.1/post/statuses/filter
-
-curl --request 'POST' 'https://stream.twitter.com/1.1/statuses/filter.json' --data 'track=4sq' --header 'Authorization: OAuth oauth_consumer_key="-----", oauth_nonce="------", oauth_signature="--------", oauth_signature_method="HMAC-SHA1", oauth_timestamp="0000000", oauth_token="------", oauth_version="1.0"' --verbose -o /mnt/multidc-data/twitter/screen-names/`date +"%y%m%d-%H%M%S"`
