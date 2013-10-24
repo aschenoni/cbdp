@@ -49,6 +49,9 @@ def main(argv):
 		iterator = ts.statuses.filter(track="4sq")
 		cnt = 0
 		for t in iterator:
+			coord = t["coordinates"]["coordinates"] if t["coordinates"] else None
+			if coord is None:
+				continue
 			sn = t["user"]["screen_name"]
 			# http://stackoverflow.com/questions/1101508/how-to-parse-dates-with-0400-timezone-string-in-python
 			#   Thu Oct 24 19:48:28 +0000 2013
