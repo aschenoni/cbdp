@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+set -u
+
+function less_output {
+	prefix=$1
+	rm -f $prefix-all
+	for f in $prefix/*
+	do
+		echo "["$f"]" >> $prefix-all
+		cat $f >> $prefix-all
+		echo "" >> $prefix-all
+	done
+	less -r $prefix-all
+}
+
+ARGC=$#
+if [ $ARGC -ne 2 ]
+then
+	printf "Usage %s datetime_begin datetime_end\n" $0
+	printf "  Ex: %s 131028-084508 131028-084830\n" $0
+	exit 1
+fi
+
+DT_BEGIN=$1
+DT_END=$2
+
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+STDERR_DN=/tmp/pssh-err
+STDOUT_DN=/tmp/pssh-out
+OUT_DIR=/mnt/multidc-data/pbdp/resmon/iptraf/$DT_BEGIN
+
+rm -rf $STDERR_DN
+rm -rf $STDOUT_DN
+mkdir -p $OUT_DIR
+
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -l root -o $STDOUT_DN -e $STDERR_DN "cd $BIN_DIR; ./_stop-and-get-logs `id -un`@`hostname` $DT_BEGIN $DT_END"
+
+less_output $STDERR_DN
+less_output $STDOUT_DN

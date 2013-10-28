@@ -1,0 +1,65 @@
+#! /usr/bin/python
+
+import sys
+import socket
+import subprocess
+import os
+import tempfile
+
+
+def stop_iptraf():
+	subprocess.call(["killall", "-w", "iptraf"])
+
+
+def gen_log_file(datetime_begin, datetime_end):
+	in_file = open("/var/log/iptraf/ip_traffic-1.log")
+
+	(out_fd, out_filename) = tempfile.mkstemp()
+	out_file = os.fdopen(out_fd, "w")
+	#print out_filename
+
+	while True:
+		line = in_file.readline()
+		if not line:
+			break
+		#line = line.strip()
+		#print line
+		if line[0:4] != "NS: ":
+			continue
+
+		datetime = line[4:17]
+		if datetime < datetime_begin:
+			continue
+
+		if datetime_end < datetime:
+			break
+
+		out_file.write(line)
+	
+	return out_filename
+
+
+def send_to_dest(tmp_log_filename, dest_hostname, dest_dir):
+	subprocess.call(["scp", tmp_log_filename, dest_hostname + ":" + dest_dir + "/" + socket.gethostname()])
+
+
+def main(argv):
+	if len(argv) != 5:
+		sys.exit("Usage: %s dest_hostname dest_dir datetime_begin datetime_end\n"
+				"   Ex: %s userid@mdc-s70 /mnt/multidc-data/pbdp/resmon/iptraf/131028-084508 131028-084508 131028-084830"
+				% (argv[0], argv[0]))
+
+	dest_hostname = argv[1]
+	dest_dir = argv[2]
+	datetime_begin = argv[3]
+	datetime_end = argv[4]
+
+	stop_iptraf()
+
+	tmp_log_filename = gen_log_file(datetime_begin, datetime_end)
+
+	send_to_dest(tmp_log_filename, dest_hostname, dest_dir)
+
+
+if __name__ == "__main__":
+	sys.exit(main(sys.argv))
