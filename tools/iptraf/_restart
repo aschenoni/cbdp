@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -u
+
+rm -f /var/log/iptraf/ip_traffic-1.log
+
+killall iptraf || true
+echo "(Re)starting iptraf..."
+/usr/local/bin/iptraf -i eth0 -B

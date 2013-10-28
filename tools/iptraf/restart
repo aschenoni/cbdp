@@ -1,0 +1,25 @@
+#!/bin/bash
+
+function less_output {
+	prefix=$1
+	rm -f $prefix-all
+	for f in $prefix/*
+	do
+		echo "["$f"]" >> $prefix-all
+		cat $f >> $prefix-all
+		echo "" >> $prefix-all
+	done
+	less -r $prefix-all
+}
+
+BIN_DIR=`cd "$( dirname "$0" )"; pwd`
+ERR_DIR=/tmp/pssh-err
+OUT_DIR=/tmp/pssh-out
+
+rm -rf $ERR_DIR
+rm -rf $OUT_DIR
+
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -l root -o $OUT_DIR -e $ERR_DIR "cd $BIN_DIR; _restart"
+
+less_output $ERR_DIR
+less_output $OUT_DIR
