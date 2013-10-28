@@ -3,8 +3,8 @@ time ./pssh "sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /
 time ./pssh service ssh restart
 
 # system update
-time ./pssh -l root "time (apt-get update && apt-get -y dist-upgrade && apt-get -y autoremove)"
-time ./pssh -l root "time (apt-get install -y htop git vim ctags)"
+time ./pssh -l root -t 0 "time (apt-get update && apt-get -y dist-upgrade && apt-get -y autoremove)"
+time ./pssh -l root -t 0 "time (apt-get install -y htop git vim ctags)"
 
 # update and rebuild the replay tool
-../git-pull && ./pssh "cd work/cbdp/twitter/40.replay && rm -rf target .dep-class-path && mvn package -DskipTests"
+../git-pull && ./pssh -t 0 "cd work/cbdp/twitter/40.replay && rm -rf target .dep-class-path && mvn package -DskipTests"
