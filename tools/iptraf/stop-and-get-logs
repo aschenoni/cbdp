@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -e
-set -u
-
 function less_output {
 	prefix=$1
 	rm -f $prefix-all
@@ -35,7 +32,7 @@ rm -rf $STDERR_DN
 rm -rf $STDOUT_DN
 mkdir -p $OUT_DIR
 
-pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -l root -o $STDOUT_DN -e $STDERR_DN "cd $BIN_DIR; ./_stop-and-get-logs `id -un`@`hostname` $DT_BEGIN $DT_END"
+pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -l root -o $STDOUT_DN -e $STDERR_DN "cd $BIN_DIR; ./_stop-and-get-logs `id -un`@`hostname` $OUT_DIR $DT_BEGIN $DT_END"
 
 less_output $STDERR_DN
 less_output $STDOUT_DN
