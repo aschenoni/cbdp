@@ -48,7 +48,7 @@ class TweetWriter implements Runnable {
 
 		public void run() {
 			try {
-				String fn = "/mnt/multidc-data/twitter/to-replay/parents";
+				String fn = "/mnt/multidc-data/pbdp/twitter/to-replay/parents";
 				BufferedReader br = new BufferedReader(new FileReader(fn));
 				while (true) {
 					String line0 = br.readLine();

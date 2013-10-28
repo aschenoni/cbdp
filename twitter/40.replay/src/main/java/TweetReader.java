@@ -135,7 +135,7 @@ class TweetReader implements Runnable {
 				// read all and reorder them in the order of replay
 				List<ChildTweet> c_tweets = new ArrayList<ChildTweet>();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd-HHmmss");
-				String fn = "/mnt/multidc-data/twitter/to-replay/children";
+				String fn = "/mnt/multidc-data/pbdp/twitter/to-replay/children";
 				BufferedReader br = new BufferedReader(new FileReader(fn));
 				while (true) {
 					String line0 = br.readLine();

@@ -77,7 +77,7 @@ public class Replay {
 		accepts("rc", "Read concurrency: Number of Tweet reader threads")
 			.withRequiredArg().ofType(Integer.class).defaultsTo(50);
 		accepts("logdir", "Log directory")
-			.withRequiredArg().defaultsTo("/mnt/multidc-data/twitter/replay-log");
+			.withRequiredArg().defaultsTo("/mnt/multidc-data/pbdp/twitter/replay-log");
 	}};
 
 	void _PrintHelp() throws java.io.IOException {
