@@ -179,7 +179,7 @@ def read_input_screen_names(screenname_filename):
 		line = fo.readline()
 		if len(line) == 0:
 			break
-		sn_set.add(line.split()[0])
+		sn_set.add(line.split()[1])
 	print "loaded %d screen names from file %s" % (len(sn_set), screenname_filename)
 	return sn_set
 
@@ -200,7 +200,7 @@ def get_tweets(sn_set, tc, out_dir_root, req_max_tid, req_o_dt):
 def main(argv):
 	if len(argv) != 3:
 		sys.exit("Usage: %s screen_name_file output_dir\n"
-				"  Ex: %s /mnt/multidc-data/twitter/twitter-4sq-130424-145533.screen_name /mnt/multidc-data/twitter/raw"
+				"  Ex: %s /mnt/multidc-data/twitter/screen-names/131024-163428 /mnt/multidc-data/twitter/raw"
 				% (argv[0], argv[0]))
 
 	screenname_filename = argv[1]
