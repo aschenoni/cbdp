@@ -96,15 +96,16 @@ def read_dc_latencies(fn, hn_ip):
 		if line[0] == "#":
 			continue
 		tokens = line.split()
-		if len(tokens) != 3:
+		if len(tokens) != 4:
 			continue
 		#print line
 		from_ = tokens[0]
 		to = tokens[1]
 		lat = tokens[2]
+		lat_speedup = tokens[3]
 		if from_ not in from_to_lat:
 			from_to_lat[from_] = {}
-		from_to_lat[from_][hn_ip[to]] = lat
+		from_to_lat[from_][hn_ip[to]] = lat_speedup
 	#print from_to_lat
 	return from_to_lat
 
