@@ -92,11 +92,13 @@ class TweetReader implements Runnable {
 		}
 
 		void CalcRT(Replay _rp, SimpleDateFormat sdf) throws java.text.ParseException {
-			// sim time = to_sim_time(r_created_at) + diff(c time - p time)
+			// sim time = to_sim_time(r_created_at) + diff(c time - p time) / P2C_SPEEDUP
+			final double P2C_SPEEDUP = 154.17;
+
 			long p_st = sdf.parse(r_created_at).getTime();
 			long p_rt = _rp.SimTimeToRealTime(p_st);
 			long c_st = sdf.parse(st_ca).getTime();
-			long diff_st = c_st - p_st;
+			long diff_st = (long) ((c_st - p_st) / P2C_SPEEDUP);
 			rt_ca = p_rt + diff_st;
 			if (diff_st < 0) {
 				System.out.printf("tid=    %d\n", tid);
