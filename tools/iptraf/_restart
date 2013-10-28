@@ -5,6 +5,6 @@ set -u
 
 rm -f /var/log/iptraf/ip_traffic-1.log
 
-killall iptraf || true
+killall -q iptraf || true
 echo "(Re)starting iptraf..."
 /usr/local/bin/iptraf -i eth0 -B
