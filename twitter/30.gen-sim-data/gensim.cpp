@@ -295,13 +295,13 @@ int main(int argc, char* argv[]) {
   try {
 		if (argc != 2) {
 			cout << "usage: " << argv[0] << " concise_tweet_dir\n" <<
-				"  e.g.: " << argv[0] << " /mnt/multidc-data/twitter/raw-concise\n";
+				"  e.g.: " << argv[0] << " /mnt/multidc-data/pbdp/twitter/raw-concise\n";
 			exit(1);
 		}
 		string in_dir = argv[1];
 		string in_p_dir = in_dir + "/parent";
 		string in_c_dir = in_dir + "/tweets";
-		string out_dir = in_dir + "/to-replay";
+		string out_dir = in_dir + "/../to-replay";
 		signal(SIGSEGV, on_signal);
 
 		map<string, vector<ParentTweet*> > parent_tweets_by_sn;

@@ -461,7 +461,7 @@ int main(int argc, char* argv[]) {
   try {
 		if (argc != 4) {
 			cout << "usage: " << argv[0] << " raw_tweet_dir date_oldest date_youngest\n" <<
-				"  e.g.: " << argv[0] << " /mnt/multidc-data/twitter/raw 130407 130427";
+				"  e.g.: " << argv[0] << " /mnt/multidc-data/pbdp/twitter/raw 130407 130427";
 			exit(1);
 		}
 		const char* in_dir = argv[1];

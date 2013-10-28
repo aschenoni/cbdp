@@ -35,7 +35,7 @@ def get_twitter_stream():
 def main(argv):
 	if len(argv) != 2:
 		sys.exit("Usage: %s screen_name_dir\n"
-				"  Ex: %s /mnt/multidc-data/twitter/screen-names"
+				"  Ex: %s /mnt/multidc-data/pbdp/twitter/screen-names"
 				% (argv[0], argv[0]))
 
 	out_dn = argv[1]

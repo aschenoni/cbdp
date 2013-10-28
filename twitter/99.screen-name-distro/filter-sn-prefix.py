@@ -5,8 +5,8 @@ import sys
 
 
 def main(argv):
-	in_fn = "/mnt/multidc-data/twitter/stat/screen-name-distro/size-sn"
-	out_fn = "/mnt/multidc-data/twitter/stat/screen-name-distro/size-sn.by-name"
+	in_fn = "/mnt/multidc-data/pbdp/twitter/stat/screen-name-distro/size-sn"
+	out_fn = "/mnt/multidc-data/pbdp/twitter/stat/screen-name-distro/size-sn.by-name"
 
 	sn_size = {}
 

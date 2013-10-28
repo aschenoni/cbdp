@@ -4,8 +4,8 @@ set border back lc rgb "#808080"
 set ylabel "size (raw data dize, MB)"
 set xlabel "screen name prefix (first 2 characters)"
 
-IN_FN = "/mnt/multidc-data/twitter/stat/screen-name-distro/size-sn.by-name"
-OUT_FN = "/mnt/multidc-data/twitter/stat/screen-name-distro/size-sn.by-name.pdf"
+IN_FN = "/mnt/multidc-data/pbdp/twitter/stat/screen-name-distro/size-sn.by-name"
+OUT_FN = "/mnt/multidc-data/pbdp/twitter/stat/screen-name-distro/size-sn.by-name.pdf"
 
 #set xtics font ",10"
 

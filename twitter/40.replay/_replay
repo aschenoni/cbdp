@@ -18,5 +18,5 @@ CUR_DATETIME=$2
 HOSTNAME=`hostname`
 
 if [ "$HOSTNAME" != "$1" ]; then
-	scp -rp /mnt/multidc-data/twitter/replay-log/$CUR_DATETIME/$HOSTNAME mdc-s70:/mnt/multidc-data/twitter/replay-log/$CUR_DATETIME
+	scp -rp /mnt/multidc-data/pbdp/twitter/replay-log/$CUR_DATETIME/$HOSTNAME mdc-s70:/mnt/multidc-data/pbdp/twitter/replay-log/$CUR_DATETIME
 fi

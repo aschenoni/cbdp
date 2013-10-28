@@ -17,7 +17,7 @@ function less_output {
 ARGS=$@
 BIN_DIR=`cd "$( dirname "$0" )"; pwd`
 CUR_DATETIME=`date +'%y%m%d-%H%M%S'`
-OUT_DIR=/mnt/multidc-data/twitter/replay-log/$CUR_DATETIME/stdout
+OUT_DIR=/mnt/multidc-data/pbdp/twitter/replay-log/$CUR_DATETIME/stdout
 
 mkdir -p $OUT_DIR
 pssh -h $BIN_DIR/hosts --option="ForwardAgent yes" -t 0 -o $OUT_DIR "$BIN_DIR/_replay `hostname` $CUR_DATETIME $ARGS 2>&1 "

@@ -189,7 +189,7 @@ def ConvPNG(dn):
 
 
 def GetLatestLogDir():
-	log_dir = "/mnt/multidc-data/twitter/replay-log"
+	log_dir = "/mnt/multidc-data/pbdp/twitter/replay-log"
 	cmd = "echo `ls -t %s` | awk '{print $1;}'" % log_dir
 	dn = subprocess.check_output(cmd, stdin=None, stderr=subprocess.STDOUT, shell=True)
 	#print dn.rstrip()
@@ -205,7 +205,7 @@ def main(argv):
 		log_dn = argv[1]
 	else:
 		sys.exit("Usage: %s [log_dir (optional)]\n"
-				"  Ex: %s /mnt/multidc-data/twitter/replay-log/131022-002226"
+				"  Ex: %s /mnt/multidc-data/pbdp/twitter/replay-log/131022-002226"
 				% (argv[0], argv[0]))
 
 	Plot(log_dn)

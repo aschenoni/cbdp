@@ -462,11 +462,11 @@ int main(int argc, char* argv[]) {
   try {
 		signal(SIGSEGV, on_signal);
 
-		string p_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/parents";
-		string c_fn = "/mnt/multidc-data/twitter/raw-concise/to-replay/children";
-		string out_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/time-series";
-		string out_hist_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo";
-		string out_cdf_fn = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/cdf";
+		string p_fn = "/mnt/multidc-data/pbdp/twitter/raw-concise/to-replay/parents";
+		string c_fn = "/mnt/multidc-data/pbdp/twitter/raw-concise/to-replay/children";
+		string out_fn = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/time-series";
+		string out_hist_fn = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/histo";
+		string out_cdf_fn = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/cdf";
 
 		map<long, Tweet*> p_tweets = read_parent_tweets(p_fn);
 		vector<Tweet*> c_tweets = read_child_tweets(c_fn);

@@ -200,7 +200,7 @@ def get_tweets(sn_set, tc, out_dir_root, req_max_tid, req_o_dt):
 def main(argv):
 	if len(argv) != 3:
 		sys.exit("Usage: %s screen_name_file output_dir\n"
-				"  Ex: %s /mnt/multidc-data/twitter/screen-names/131024-163428 /mnt/multidc-data/twitter/raw"
+				"  Ex: %s /mnt/multidc-data/pbdp/twitter/screen-names/131024-163428 /mnt/multidc-data/pbdp/twitter/raw"
 				% (argv[0], argv[0]))
 
 	screenname_filename = argv[1]

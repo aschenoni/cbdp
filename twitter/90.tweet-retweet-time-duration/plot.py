@@ -33,20 +33,20 @@ def Plot():
 	jobs = []
 	cmd = "gnuplot time-series.gnuplot"
 	env = os.environ.copy()
-	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/time-series"
+	env["INFILE"] = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/time-series"
 	jobs.append(run_subprocess(cmd, env));
 
 	cmd = "gnuplot histo.gnuplot"
-	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo-24"
+	env["INFILE"] = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/histo-24"
 	env["BUCKET_SIZE"] = "24"
 	jobs.append(run_subprocess(cmd, env));
 
-	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/histo-1"
+	env["INFILE"] = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/histo-1"
 	env["BUCKET_SIZE"] = "1"
 	jobs.append(run_subprocess(cmd, env));
 
 	cmd = "gnuplot cdf.gnuplot"
-	env["INFILE"] = "/mnt/multidc-data/twitter/stat/tweet-retweet-interval/cdf"
+	env["INFILE"] = "/mnt/multidc-data/pbdp/twitter/stat/tweet-retweet-interval/cdf"
 	jobs.append(run_subprocess(cmd, env));
 
 	for j in jobs:
